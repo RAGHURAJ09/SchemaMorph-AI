@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background-color: #0f0f14;
+  color: #e0e7ff;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbars ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar         { width: 6px; height: 6px; }
+::-webkit-scrollbar-track   { background: #16161f; }
+::-webkit-scrollbar-thumb   { background: #2e2e42; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
+
+/* ── Glass card utility ────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(30, 30, 42, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+}
+
+/* ── Gradient text ─────────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Animated background grid ──────────────────────────────────────────────── */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── React Flow overrides ──────────────────────────────────────────────────── */
+.react-flow__background { background-color: #16161f !important; }
+.react-flow__controls   { background: #1e1e2a !important; border: 1px solid #2e2e42 !important; }
+.react-flow__controls button { background: #1e1e2a !important; color: #818cf8 !important; border-color: #2e2e42 !important; }
+.react-flow__minimap    { background: #1e1e2a !important; border: 1px solid #2e2e42 !important; }
+.react-flow__minimap-mask { fill: #0f0f14aa !important; }
+
+/* ── Code blocks ───────────────────────────────────────────────────────────── */
+pre, code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+}
+
+/* ── Button base ───────────────────────────────────────────────────────────── */
+.btn-primary {
+  @apply px-5 py-2.5 rounded-lg font-semibold text-sm
+         bg-brand-500 hover:bg-brand-600 text-white
+         transition-all duration-200
+         shadow-lg shadow-brand-900/50
+         active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-ghost {
+  @apply px-5 py-2.5 rounded-lg font-medium text-sm
+         text-brand-400 hover:text-white
+         border border-surface-500 hover:border-brand-500
+         bg-transparent hover:bg-surface-700
+         transition-all duration-200 active:scale-95;
+}
