@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { uploadSchemaFile, uploadSchemaText, uploadQueries, runAnalysis } from '../api/client'
+import { DEMO_SCHEMAS } from '../data/sampleSchemas'
 
 const SAMPLE_SCHEMA = `-- Paste your PostgreSQL schema here
 CREATE TABLE users (
@@ -46,6 +47,15 @@ export default function Upload() {
   const [queryText, setQueryText] = useState('')
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(null)
+  const [activeDemoId, setActiveDemoId] = useState(null)
+
+  const loadDemo = (demo) => {
+    setSchemaText(demo.schema)
+    setQueryText(demo.sampleQueries)
+    setSchemaMode('text')
+    setActiveDemoId(demo.id)
+    toast.success(`Loaded: ${demo.label}`)
+  }
 
   const handleFileChange = (e) => {
     const f = e.target.files[0]
@@ -143,6 +153,37 @@ export default function Upload() {
 
         {/* Main card */}
         <div className="glass p-8 animate-slide-up">
+
+          {/* Demo schema quick-load bar */}
+          <div className="mb-8 p-4 rounded-xl border border-surface-700 bg-surface-800/50">
+            <p className="text-xs font-semibold text-surface-500 uppercase tracking-widest mb-3">
+              ⚡ Try a Demo Schema — powered by public APIs
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {DEMO_SCHEMAS.map(demo => (
+                <button
+                  key={demo.id}
+                  onClick={() => loadDemo(demo)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${
+                    activeDemoId === demo.id
+                      ? 'bg-brand-500/20 border-brand-500/50 text-brand-300'
+                      : 'bg-surface-700 border-surface-600 text-surface-300 hover:border-brand-500/40 hover:text-white'
+                  }`}
+                  title={demo.description}
+                >
+                  <span>{demo.emoji}</span>
+                  <span>{demo.label}</span>
+                  {activeDemoId === demo.id && <span className="text-brand-400">✓</span>}
+                </button>
+              ))}
+            </div>
+            {activeDemoId && (
+              <p className="text-xs text-surface-500 mt-2">
+                {DEMO_SCHEMAS.find(d => d.id === activeDemoId)?.description}
+              </p>
+            )}
+          </div>
+
           {/* Schema Input */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-3">

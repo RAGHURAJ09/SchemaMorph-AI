@@ -11,7 +11,7 @@ venv/
 env/
 *.egg
 
-# Env files
+# Env files (all .env files at any depth)
 .env
 .env.local
 .env.production
