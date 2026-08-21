@@ -1,7 +1,7 @@
 """
 Prompt templates for LangChain.
 """
-from langchain.prompts import (
+from langchain_core.prompts import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
