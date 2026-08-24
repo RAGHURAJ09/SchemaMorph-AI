@@ -41,3 +41,9 @@ Thumbs.db
 
 # Uploads (schema dumps stored temporarily)
 backend/uploads/
+
+#Extras
+part10_testing_risks_roadmap.md
+smoke_test.py
+testing_report.md
+test_endpoint.py
