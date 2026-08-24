@@ -12,7 +12,7 @@ import json
 from app.api.dependencies import get_db
 from app.models.database import Project, ParsedTable, TableDependency, WorkloadQuery, AnalysisRun, ServiceBoundary, QueryRefactoring
 from app.graph.builder import build_graph, serialize_graph
-from app.graph.clusterer import cluster_graph, get_cluster_summary
+from app.graph.clusterer import cluster_graph_with_timeout, get_cluster_summary
 from app.ai.engine import run_analysis
 from app.validation.validator import validate_analysis
 from app.reports.generator import generate_report
@@ -40,6 +40,15 @@ async def analyze(request: AnalyzeRequest, db: Session = Depends(get_db)):
     if not tables:
         raise HTTPException(status_code=400, detail="No schema uploaded for this project.")
 
+    # ── Risk Mitigation: hard cap at 100 tables ────────────────────────────────
+    TABLE_LIMIT = 100
+    if len(tables) > TABLE_LIMIT:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Schema has {len(tables)} tables which exceeds the {TABLE_LIMIT}-table limit. "
+                   f"Split your schema into smaller sections and analyze each separately."
+        )
+
     schema_result = {
         "tables": {t.table_name: {"name": t.table_name, "columns": t.columns_metadata, "incoming_fk_count": 0, "is_hub": False, "is_isolated": False} for t in tables},
         "foreign_keys": []
@@ -47,9 +56,12 @@ async def analyze(request: AnalyzeRequest, db: Session = Depends(get_db)):
     
     for dep in deps:
         if dep.dependency_type == "FOREIGN_KEY":
+            meta = dep.meta_data if hasattr(dep, 'meta_data') else getattr(dep, 'metadata', {})
             schema_result["foreign_keys"].append({
                 "from_table": dep.source_table.table_name,
-                "to_table": dep.target_table.table_name
+                "to_table": dep.target_table.table_name,
+                "from_columns": (meta or {}).get("from_cols", ["unknown"]),
+                "to_columns": (meta or {}).get("to_cols", ["unknown"]),
             })
 
     # ── 2. Reconstruct query_analyses from DB ────────────────────────────────
@@ -68,11 +80,15 @@ async def analyze(request: AnalyzeRequest, db: Session = Depends(get_db)):
     if len(graph.nodes) == 0:
         raise HTTPException(status_code=422, detail="Graph is empty.")
 
-    partition, modularity = cluster_graph(graph)
+    partition, modularity, timeout_warning = cluster_graph_with_timeout(graph, timeout=10)
     cluster_summaries = get_cluster_summary(partition, schema_result)
 
     # ── 4. AI narration (LangChain) ──────────────────────────────────────────
     ai_result = run_analysis(cluster_summaries, query_analyses, schema_result)
+    if timeout_warning:
+        ai_result["general_recommendations"] = [
+            timeout_warning
+        ] + ai_result.get("general_recommendations", [])
 
     # ── 5. Validate & Serialize ──────────────────────────────────────────────
     validation_result = validate_analysis(partition, ai_result, query_analyses, schema_result)

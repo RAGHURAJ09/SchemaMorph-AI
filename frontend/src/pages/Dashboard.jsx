@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import toast from 'react-hot-toast'
-import { getSession, getMarkdownExport } from '../api/client'
+import { getMarkdownExport } from '../api/client'
+import useAnalysisStore from '../store/useAnalysisStore'
 import GraphView from '../components/GraphView'
 import ServicePanel from '../components/ServicePanel'
 import QueryDiff from '../components/QueryDiff'
@@ -10,19 +10,22 @@ import ValidationBadge from '../components/ValidationBadge'
 
 export default function Dashboard() {
   const { sessionId } = useParams()
-  const [data, setData]     = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('graph') // 'graph' | 'schemas' | 'queries'
+  const analysisData = useAnalysisStore(state => state.analysisData)
+  const isStaleOrMissing = useAnalysisStore(state => state.isStaleOrMissing)
+  const [activeTab, setActiveTab] = useState('graph')
 
-  useEffect(() => {
-    getSession(sessionId)
-      .then(setData)
-      .catch(() => toast.error('Failed to load session. Try re-analyzing.'))
-      .finally(() => setLoading(false))
-  }, [sessionId])
+  if (isStaleOrMissing(sessionId)) {
+    return (
+      <div className="min-h-screen bg-surface-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-surface-400 mb-4">Session expired or not found.</p>
+          <Link to="/" className="btn-primary">Return to Upload</Link>
+        </div>
+      </div>
+    )
+  }
 
-  if (loading) return <LoadingScreen />
-  if (!data)   return <ErrorScreen sessionId={sessionId} />
+  const data = analysisData
 
   const { summary, graph, services, target_schemas, affected_queries, validation, general_recommendations } = data
   const brokenQueries = affected_queries.filter(q => q.is_broken)

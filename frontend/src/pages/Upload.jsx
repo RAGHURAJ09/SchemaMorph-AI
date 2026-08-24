@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { uploadSchemaFile, uploadSchemaText, uploadQueries, runAnalysis } from '../api/client'
 import { DEMO_SCHEMAS } from '../data/sampleSchemas'
+import useAnalysisStore from '../store/useAnalysisStore'
 
 const SAMPLE_SCHEMA = `-- Paste your PostgreSQL schema here
 CREATE TABLE users (
@@ -48,6 +49,8 @@ export default function Upload() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(null)
   const [activeDemoId, setActiveDemoId] = useState(null)
+
+  const setAnalysisData = useAnalysisStore(state => state.setAnalysisData)
 
   const loadDemo = (demo) => {
     setSchemaText(demo.schema)
@@ -111,7 +114,8 @@ export default function Upload() {
 
       // Step 3: Run analysis
       setStep('Running AI analysis...')
-      await runAnalysis(sessionId)
+      const analysisResult = await runAnalysis(sessionId)
+      setAnalysisData(analysisResult)
 
       toast.success('Analysis complete!')
       navigate(`/dashboard/${sessionId}`)

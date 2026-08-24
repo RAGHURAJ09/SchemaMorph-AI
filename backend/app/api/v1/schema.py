@@ -100,7 +100,11 @@ async def upload_schema(
                 project_id=project.id,
                 source_table_id=from_table.id,
                 target_table_id=to_table.id,
-                dependency_type="FOREIGN_KEY"
+                dependency_type="FOREIGN_KEY",
+                meta_data={
+                    "from_cols": fk.get("from_columns", ["unknown"]),
+                    "to_cols": fk.get("to_columns", ["unknown"])
+                }
             )
             db.add(dep)
     

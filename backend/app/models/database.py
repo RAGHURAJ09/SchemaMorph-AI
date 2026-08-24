@@ -79,7 +79,8 @@ class TableDependency(Base):
     project_id = Column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
     source_table_id = Column(String(36), ForeignKey("parsed_tables.id", ondelete="CASCADE"), nullable=False)
     target_table_id = Column(String(36), ForeignKey("parsed_tables.id", ondelete="CASCADE"), nullable=False)
-    dependency_type = Column(String(50), nullable=False)  # 'FOREIGN_KEY', 'INFERRED_JOIN'
+    dependency_type = Column(String(50), nullable=False)  # 'FOREIGN_KEY', 'JOIN', etc.
+    meta_data = Column("metadata", JSON, nullable=True)  # Store specific keys (e.g. {"from_cols": ["id"], "to_cols": ["user_id"]})
 
     # Relationships
     project = relationship("Project", back_populates="dependencies")

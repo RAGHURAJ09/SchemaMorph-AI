@@ -7,8 +7,9 @@ Input:  networkx.Graph with weighted edges
 Output: partition dict {table_name: cluster_id}, modularity score
 """
 import networkx as nx
+import threading
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # python-louvain installs as the 'community' package
 try:
@@ -60,6 +61,46 @@ def cluster_graph(G: nx.Graph, min_cluster_size: int = 2) -> Tuple[Dict[str, int
         modularity = 0.0
 
     return partition, round(modularity, 4)
+
+
+def cluster_graph_with_timeout(
+    G: nx.Graph,
+    min_cluster_size: int = 2,
+    timeout: int = 10,
+) -> Tuple[Dict[str, int], float, Optional[str]]:
+    """
+    Run cluster_graph inside a thread with a hard timeout.
+
+    Risk mitigation (Part 10): Louvain on 100+ table schemas can take 30+ seconds.
+    If it times out, everything goes into cluster 0 and a warning is returned.
+
+    Returns:
+        (partition, modularity, warning_message_or_None)
+    """
+    result: dict = {}
+
+    def _run():
+        try:
+            p, m = cluster_graph(G, min_cluster_size)
+            result["partition"] = p
+            result["modularity"] = m
+        except Exception as exc:
+            result["error"] = str(exc)
+
+    t = threading.Thread(target=_run, daemon=True)
+    t.start()
+    t.join(timeout)
+
+    if "partition" in result:
+        return result["partition"], result["modularity"], None
+
+    # Timeout or error — single-cluster fallback
+    fallback_partition = {n: 0 for n in G.nodes()}
+    warning = (
+        f"Graph clustering timed out after {timeout}s (schema has {G.number_of_nodes()} tables). "
+        "All tables placed in a single service. Consider splitting the schema."
+    )
+    return fallback_partition, 0.0, warning
 
 
 def get_cluster_summary(partition: Dict[str, int], schema_result: dict) -> List[dict]:
