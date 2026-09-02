@@ -9,6 +9,7 @@ from typing import Optional
 
 from app.parsers.schema_parser import parse_schema
 from app.api.dependencies import get_db
+from app.core.security import get_current_user_id
 from app.models.database import User, Project, ParsedTable, TableDependency
 
 router = APIRouter()
@@ -19,7 +20,8 @@ async def upload_schema(
     file: Optional[UploadFile] = File(None),
     schema_text: Optional[str] = Form(None),
     project_name: str = Form("My Project"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_id)
 ):
     """
     Parse a PostgreSQL schema dump and save to Supabase/PostgreSQL.
@@ -56,17 +58,9 @@ async def upload_schema(
 
     # ── Persist to Database ──────────────────────────────────────────────────
     
-    # 1. Ensure a dummy user exists for dev (Replace with JWT Auth later)
-    user = db.query(User).first()
-    if not user:
-        user = User(email="demo@schemamorph.ai", password_hash="dummy")
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-    # 2. Create Project
+    # 1. Create Project linked to the authenticated user
     project = Project(
-        user_id=user.id,
+        user_id=current_user_id,
         name=project_name,
         source_schema_sql=sql_text
     )

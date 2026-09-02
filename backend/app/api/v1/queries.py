@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.parsers.query_parser import parse_queries
 from app.api.dependencies import get_db
+from app.core.security import get_current_user_id
 from app.models.database import Project, WorkloadQuery
 
 router = APIRouter()
@@ -17,12 +18,19 @@ class QueryUploadRequest(BaseModel):
 
 
 @router.post("/upload-queries")
-async def upload_queries(request: QueryUploadRequest, db: Session = Depends(get_db)):
+async def upload_queries(
+    request: QueryUploadRequest, 
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_id)
+):
     """
     Parse SQL queries, extract table access patterns, and save to Postgres.
-    Requires a valid project ID (session_id).
+    Requires a valid project ID (session_id) owned by the current user.
     """
-    project = db.query(Project).filter(Project.id == request.session_id).first()
+    project = db.query(Project).filter(
+        Project.id == request.session_id,
+        Project.user_id == current_user_id
+    ).first()
     if not project:
         raise HTTPException(
             status_code=404,

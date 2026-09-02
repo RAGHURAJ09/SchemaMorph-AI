@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SchemaMorph-AI — Complete Project Requirements & Setup Guide</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1a1a2e;
+            background: #fff;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #6366f1;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #6366f1;
+            margin-bottom: 5px;
+        }
+
+        .header .subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .header .date {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: #1e1e2e;
+            border-left: 4px solid #6366f1;
+            padding-left: 12px;
+            margin: 30px 0 15px 0;
+        }
+
+        h3 {
+            font-size: 16px;
+            color: #333;
+            margin: 20px 0 10px 0;
+        }
+
+        h4 {
+            font-size: 14px;
+            color: #555;
+            margin: 15px 0 8px 0;
+        }
+
+        p {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #6366f1;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9ff;
+        }
+
+        .critical {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .critical strong {
+            color: #dc2626;
+        }
+
+        .warning {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning strong {
+            color: #d97706;
+        }
+
+        .success {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .success strong {
+            color: #059669;
+        }
+
+        .info {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .info strong {
+            color: #2563eb;
+        }
+
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #e11d48;
+        }
+
+        pre {
+            background: #1e1e2e;
+            color: #a5f3fc;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-required {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .badge-optional {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .badge-free {
+            background: #f0fdf4;
+            color: #059669;
+        }
+
+        ul,
+        ol {
+            margin: 10px 0 10px 20px;
+            font-size: 14px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        .checklist {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .checklist li {
+            padding: 6px 0;
+            padding-left: 28px;
+            position: relative;
+        }
+
+        .checklist li::before {
+            content: "☐";
+            position: absolute;
+            left: 0;
+            font-size: 16px;
+        }
+
+        .section-divider {
+            border: none;
+            border-top: 2px solid #e5e7eb;
+            margin: 30px 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #6366f1;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .env-box {
+            background: #1e1e2e;
+            color: #a5f3fc;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+
+        .env-box .comment {
+            color: #6b7280;
+        }
+
+        .env-box .key {
+            color: #fbbf24;
+        }
+
+        .env-box .value {
+            color: #34d399;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            background: #fafafa;
+        }
+
+        .card h4 {
+            margin-top: 0;
+            color: #6366f1;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1>SchemaMorph-AI</h1>
+        <div class="subtitle">Complete Project Requirements & Setup Guide</div>
+        <div class="date">Generated: September 2, 2026 | Version 1.0.0</div>
+    </div>
+
+    <!-- SECTION 1: PROJECT OVERVIEW -->
+    <h2>1. Project Overview</h2>
+    <p>SchemaMorph-AI analyzes monolithic PostgreSQL schemas and discovers natural microservice boundaries using graph
+        analysis (NetworkX + Louvain clustering) and Gemini AI narration.</p>
+
+    <div class="grid-2">
+        <div class="card">
+            <h4>Backend</h4>
+            <p>FastAPI + Python 3.11+<br>SQL parsing (sqlglot) → Graph (NetworkX) → Clustering (Louvain) → AI (Gemini) →
+                Validation → Report</p>
+        </div>
+        <div class="card">
+            <h4>Frontend</h4>
+            <p>React 18 + Vite + Tailwind CSS<br>React Flow graph visualization, service panels, query diff view,
+                markdown export</p>
+        </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- SECTION 2: REQUIRED SERVICES & API KEYS -->
+    <h2>2. Required Services & API Keys</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Priority</th>
+                <th>Cost</th>
+                <th>Purpose</th>
+                <th>Where to Get</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Gemini API Key</strong></td>
+                <td><span class="badge badge-required">REQUIRED</span></td>
+                <td><span class="badge badge-free">FREE</span></td>
+                <td>Powers AI cluster naming, rationale writing, and query refactoring suggestions</td>
+                <td><a href="https://aistudio.google.com">aistudio.google.com</a></td>
+            </tr>
+            <tr>
+                <td><strong>SECRET_KEY</strong></td>
+                <td><span class="badge badge-required">REQUIRED</span></td>
+                <td><span class="badge badge-free">FREE</span></td>
+                <td>JWT token signing for user authentication</td>
+                <td>Generated locally (see below)</td>
+            </tr>
+            <tr>
+                <td><strong>Database (DATABASE_URL)</strong></td>
+                <td><span class="badge badge-required">REQUIRED</span></td>
+                <td><span class="badge badge-free">FREE</span></td>
+                <td>Stores users, projects, schemas, analysis results</td>
+                <td>SQLite (local) or Supabase (cloud)</td>
+            </tr>
+            <tr>
+                <td><strong>Supabase</strong></td>
+                <td><span class="badge badge-optional">OPTIONAL</span></td>
+                <td><span class="badge badge-free">FREE</span></td>
+                <td>Cloud PostgreSQL database (replaces local SQLite)</td>
+                <td><a href="https://supabase.com">supabase.com</a></td>
+            </tr>
+            <tr>
+                <td><strong>Google OAuth</strong></td>
+                <td><span class="badge badge-optional">NOT IMPLEMENTED</span></td>
+                <td><span class="badge badge-free">FREE</span></td>
+                <td>Google social login (mentioned in docs but NO code exists)</td>
+                <td>Google Cloud Console</td>
+            </tr>
+            <tr>
+                <td><strong>Firebase Auth</strong></td>
+                <td><span class="badge badge-optional">NOT IMPLEMENTED</span></td>
+                <td><span class="badge badge-free">FREE</span></td>
+                <td>Alternative social login (mentioned in docs but NO code exists)</td>
+                <td>Firebase Console</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="critical">
+        <strong>IMPORTANT:</strong> Only the Gemini API Key and SECRET_KEY are truly required. The project defaults to
+        local SQLite — no Supabase needed unless you want cloud persistence. Google OAuth and Firebase are mentioned in
+        the setup guide but have ZERO implementation in the codebase.
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- SECTION 3: STEP-BY-STEP SETUP -->
+    <h2>3. Step-by-Step Setup Instructions</h2>
+
+    <h3>Step 1: Get a Free Gemini API Key</h3>
+    <ol>
+        <li>Go to <a href="https://aistudio.google.com">https://aistudio.google.com</a></li>
+        <li>Log in with any Google/Gmail account</li>
+        <li>Click <strong>"Get API key"</strong> (top left or top right)</li>
+        <li>Click <strong>"Create API key in new project"</strong></li>
+        <li>Copy the generated key (starts with <code>AIzaSy...</code>)</li>
+        <li>Free tier: 15 Requests/Minute, 1,000,000 Tokens/Minute</li>
+    </ol>
+
+    <h3>Step 2: Generate a Secure SECRET_KEY</h3>
+    <p>Run one of these commands in your terminal:</p>
+    <pre><code># Python
+python -c "import secrets; print(secrets.token_hex(32))"
+
+# PowerShell (Windows)
+[guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")</code></pre>
+    <p>Copy the 64-character hex string output.</p>
+
+    <h3>Step 3: Configure Environment Variables</h3>
+    <p>Create/edit the <code>.env</code> file in the project root:</p>
+    <div class="env-box"><span class="comment"># ── AI Engine ──────────────────────────────────────────</span>
+        <span class="key">GEMINI_API_KEY</span>=<span class="value">AIzaSyYourActualKeyHere</span>
+
+        <span class="comment"># ── JWT Security ───────────────────────────────────────</span>
+        <span class="key">SECRET_KEY</span>=<span
+            class="value">9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a</span>
+
+        <span class="comment"># ── Database (default: local SQLite — zero setup) ───────</span>
+        <span class="key">DATABASE_URL</span>=<span class="value">sqlite:///./schemamorph.db</span>
+
+        <span class="comment"># ── CORS ────────────────────────────────────────────────</span>
+        <span class="key">ALLOWED_ORIGINS</span>=<span
+            class="value">http://localhost:5173,http://localhost:3000,http://localhost</span>
+    </div>
+
+    <h3>Step 4: Start the Backend</h3>
+    <pre><code>cd backend
+python -m venv venv
+# Windows:
+.\venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+pip install -r requirements.txt
+python run.py
+# → http://localhost:8000
+# → API docs: http://localhost:8000/docs</code></pre>
+
+    <h3>Step 5: Start the Frontend</h3>
+    <pre><code>cd frontend
+npm install
+npm run dev
+# → http://localhost:5173</code></pre>
+
+    <hr class="section-divider">
+
+    <!-- SECTION 4: IF USING SUPABASE -->
+    <h2>4. Optional: Supabase Cloud Database Setup</h2>
+
+    <div class="info">
+        <strong>When to use:</strong> Only if you need persistent cloud storage across deployments. Local SQLite works
+        fine for development and demos.
+    </div>
+
+    <ol>
+        <li>Go to <a href="https://supabase.com">https://supabase.com</a> and sign up with GitHub or Google</li>
+        <li>Click <strong>"New Project"</strong>, select organization</li>
+        <li>Enter details:
+            <ul>
+                <li><strong>Name:</strong> SchemaMorph-AI</li>
+                <li><strong>Database Password:</strong> Set a strong password (save it!)</li>
+                <li><strong>Region:</strong> Closest to you</li>
+            </ul>
+        </li>
+        <li>Wait ~2 minutes for initialization</li>
+        <li>Go to <strong>Project Settings</strong> → <strong>Database</strong> → <strong>Connection String</strong> →
+            <strong>URI</strong>
+        </li>
+        <li>Copy the URI and replace placeholders:
+            <pre><code>postgresql://postgres.[project-ref]:[YOUR-PASSWORD]@aws-0-[region].pooler.supabase.com:6543/postgres</code></pre>
+        </li>
+        <li>Set in <code>.env</code>:
+            <pre><code>DATABASE_URL=postgresql://postgres.abcdefghijk:MyPassword123@aws-0-us-east-1.pooler.supabase.com:6543/postgres</code></pre>
+        </li>
+    </ol>
+
+    <hr class="section-divider">
+
+    <!-- SECTION 5: OPTIONAL - DEPLOYMENT -->
+    <h2>5. Optional: Production Deployment</h2>
+
+    <div class="grid-2">
+        <div class="card">
+            <h4>Backend → Render</h4>
+            <ul>
+                <li>Push to GitHub</li>
+                <li>Create Web Service on Render</li>
+                <li>Set environment variables in Render dashboard</li>
+                <li>Build command: <code>pip install -r requirements.txt</code></li>
+                <li>Start command: <code>uvicorn app.main:app</code></li>
+            </ul>
+        </div>
+        <div class="card">
+            <h4>Frontend → Vercel</h4>
+            <ul>
+                <li>Push to GitHub</li>
+                <li>Import on Vercel</li>
+                <li>Update <code>vercel.json</code> with your Render backend URL</li>
+                <li>Auto-deploys on push</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="warning">
+        <strong>NOTE:</strong> The <code>frontend/vercel.json</code> currently has a placeholder URL
+        (<code>REPLACE-WITH-YOUR-BACKEND.onrender.com</code>). You must replace this with your actual Render backend URL
+        before deploying.
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- SECTION 6: DOCKER SETUP -->
+    <h2>6. Docker Setup (Optional)</h2>
+
+    <p>The project includes Docker Compose for containerized deployment:</p>
+    <pre><code>docker-compose up --build</code></p>
+
+<p>This starts 3 containers:</p>
+<table>
+    <thead>
+        <tr>
+            <th>Container</th>
+            <th>Port</th>
+            <th>Purpose</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>schemamorph_db</code></td>
+            <td>5432</td>
+            <td>PostgreSQL 16 Alpine database</td>
+        </tr>
+        <tr>
+            <td><code>schemamorph_backend</code></td>
+            <td>8000</td>
+            <td>FastAPI backend</td>
+        </tr>
+        <tr>
+            <td><code>schemamorph_frontend</code></td>
+            <td>80</td>
+            <td>Nginx-served React frontend</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="warning">
+    <strong>Requirements:</strong> Docker and Docker Compose must be installed. The <code>.env</code> file in root must have valid <code>GEMINI_API_KEY</code> and <code>SECRET_KEY</code>.
+</div>
+
+<hr class="section-divider">
+
+<!-- SECTION 7: COMPLETE ENV TEMPLATE -->
+<h2>7. Complete .env Template</h2>
+
+<div class="env-box"><span class="comment"># ── Application Environment ───────────────────────────────────────────────────</span>
+<span class="key">APP_ENV</span>=<span class="value">development</span>
+
+<span class="comment"># ── JWT Security Key ──────────────────────────────────────────────────────────</span>
+<span class="comment"># Generated via: python -c "import secrets; print(secrets.token_hex(32))"</span>
+<span class="key">SECRET_KEY</span>=<span class="value">dev-secret-key-change-in-production-12345</span>
+
+<span class="comment"># ── Database Connection ───────────────────────────────────────────────────────</span>
+<span class="comment"># Option A: Local SQLite (Zero setup needed)</span>
+<span class="key">DATABASE_URL</span>=<span class="value">sqlite:///./schemamorph.db</span>
+
+<span class="comment"># Option B: Supabase PostgreSQL (Free Cloud DB)</span>
+<span class="comment"># DATABASE_URL=postgresql://postgres.xxx:password@aws-0-us-east-1.pooler.supabase.com:6543/postgres</span>
+
+<span class="comment"># ── Gemini AI Engine ──────────────────────────────────────────────────────────</span>
+<span class="comment"># Get free key from: https://aistudio.google.com/</span>
+<span class="key">GEMINI_API_KEY</span>=<span class="value">your_gemini_api_key_here</span>
+
+<span class="comment"># ── OAuth & Social Auth (NOT IMPLEMENTED — ignore these) ─────────────────────</span>
+<span class="comment"># GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com</span>
+<span class="comment"># GOOGLE_CLIENT_SECRET=GOCSPX-your-client-secret</span>
+
+<span class="comment"># ── CORS Settings ─────────────────────────────────────────────────────────────</span>
+<span class="key">ALLOWED_ORIGINS</span>=<span class="value">http://localhost:5173,http://localhost:3000,http://localhost</span>
+
+<span class="comment"># ── Docker (only used by docker-compose.yml) ─────────────────────────────────</span>
+<span class="key">POSTGRES_PASSWORD</span>=<span class="value">postgres_password</span></div>
+
+<hr class="section-divider">
+
+<!-- SECTION 8: RUNNING TESTS -->
+<h2>8. Running Tests</h2>
+
+<pre><code>cd backend
+.\venv\Scripts\activate
+pytest tests/ -v
+
+# With coverage report:
+pytest tests/ --cov=app --cov-report=term-missing --cov-report=html</code></pre>
+
+    <div class="info">
+        <strong>Note:</strong> Integration tests require a running database. If using SQLite, they work out of the box.
+        If using Supabase, ensure <code>DATABASE_URL</code> is set correctly.
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- SECTION 9: VERIFICATION CHECKLIST -->
+    <h2>9. Verification Checklist</h2>
+
+    <ul class="checklist">
+        <li><code>GEMINI_API_KEY</code> is set in <code>.env</code> with a valid key</li>
+        <li><code>SECRET_KEY</code> is a 64-character random hex string</li>
+        <li>Backend starts without errors: <code>python run.py</code></li>
+        <li>API docs accessible: <code>http://localhost:8000/docs</code></li>
+        <li>Frontend starts without errors: <code>npm run dev</code></li>
+        <li>Frontend loads in browser: <code>http://localhost:5173</code></li>
+        <li>Can register a new account</li>
+        <li>Can log in with registered account</li>
+        <li>Can paste a SQL schema and click Analyze</li>
+        <li>Dashboard shows graph, services, and target schemas</li>
+        <li>Export button downloads a Markdown report</li>
+        <li>Demo schemas load correctly from the quick-load bar</li>
+    </ul>
+
+    <hr class="section-divider">
+
+    <!-- SECTION 10: PROJECT STRUCTURE -->
+    <h2>10. Final Project Structure (After Cleanup)</h2>
+
+    <pre><code>SchemaMorph-AI/
+├── .env                          ← YOU MUST CONFIGURE THIS
+├── .gitignore
+├── docker-compose.yml
+├── README.md
+├── KEYS_AND_SERVICES_GUIDE.md
+├── PROJECT_REQUIREMENTS.html     ← This document
+│
+├── backend/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── run.py                    ← Entry point: python run.py
+│   ├── pytest.ini
+│   ├── .env.example
+│   ├── app/
+│   │   ├── main.py               ← FastAPI app
+│   │   ├── core/
+│   │   │   └── security.py       ← JWT + bcrypt auth
+│   │   ├── models/
+│   │   │   ├── database.py       ← SQLAlchemy ORM (7 tables)
+│   │   │   └── schemas.py        ← Pydantic request/response
+│   │   ├── parsers/
+│   │   │   ├── schema_parser.py  ← SQL DDL parser (deterministic)
+│   │   │   └── query_parser.py   ← SQL query parser (deterministic)
+│   │   ├── graph/
+│   │   │   ├── builder.py        ← NetworkX graph builder
+│   │   │   └── clusterer.py      ← Louvain clustering
+│   │   ├── ai/
+│   │   │   ├── engine.py         ← Gemini AI integration
+│   │   │   └── prompts.py        ← LangChain prompts
+│   │   ├── validation/
+│   │   │   └── validator.py      ← Analysis validator
+│   │   ├── reports/
+│   │   │   └── generator.py      ← Report + DDL generator
+│   │   └── api/
+│   │       ├── dependencies.py   ← DB session factory
+│   │       └── v1/
+│   │           ├── router.py     ← Route aggregation
+│   │           ├── auth.py       ← POST /register, /login
+│   │           ├── schema.py     ← POST /upload-schema
+│   │           ├── queries.py    ← POST /upload-queries
+│   │           └── analysis.py   ← POST /analyze, GET /session/{id}
+│   └── tests/
+│       ├── conftest.py           ← Test fixtures
+│       ├── unit/
+│       │   ├── test_schema_parser.py
+│       │   ├── test_graph_builder.py
+│       │   └── test_ai_engine.py
+│       ├── integration/
+│       │   └── test_api_pipeline.py
+│       └── fixtures/schemas/
+│           ├── simple_3table.sql
+│           ├── pg_dump_style.sql
+│           ├── 15table_ecommerce.sql
+│           ├── edge_cases.sql
+│           └── no_fks.sql
+│
+└── frontend/
+    ├── Dockerfile
+    ├── nginx.conf
+    ├── index.html
+    ├── package.json
+    ├── vite.config.js
+    ├── tailwind.config.js
+    ├── postcss.config.js
+    ├── vercel.json
+    └── src/
+        ├── main.jsx
+        ├── App.jsx
+        ├── index.css
+        ├── api/
+        │   └── client.js         ← Axios API client
+        ├── store/
+        │   ├── useAnalysisStore.js ← Zustand analysis store
+        │   └── authStore.js       ← Zustand auth store
+        ├── pages/
+        │   ├── Upload.jsx         ← Schema upload page
+        │   ├── Dashboard.jsx      ← Results dashboard
+        │   ├── Login.jsx          ← Login form
+        │   └── Register.jsx       ← Registration form
+        ├── components/
+        │   ├── GraphView.jsx      ← React Flow graph
+        │   ├── ServicePanel.jsx   ← Service cards
+        │   ├── QueryDiff.jsx      ← Query diff view
+        │   ├── StatsBar.jsx       ← Stats bar
+        │   └── ValidationBadge.jsx ← Validation badge
+        └── data/
+            └── sampleSchemas.js   ← 3 demo schemas</code></pre>
+
+    <hr class="section-divider">
+
+    <!-- SECTION 11: DELETED FILES -->
+    <h2>11. Files Deleted (No Impact)</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Reason Deleted</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>backend/app/storage/session_store.py</code></td>
+                <td>Dead code — replaced by SQLAlchemy database. Not imported anywhere.</td>
+            </tr>
+            <tr>
+                <td><code>backend/app/storage/</code> (entire directory)</td>
+                <td>Empty after removing session_store.py</td>
+            </tr>
+            <tr>
+                <td><code>backend/schemamorph.db</code></td>
+                <td>Runtime-generated SQLite file. Auto-created on first run.</td>
+            </tr>
+            <tr>
+                <td><code>backend/schemamorph_v2.db</code></td>
+                <td>Runtime-generated SQLite file. Now added to .gitignore.</td>
+            </tr>
+            <tr>
+                <td><code>backend/smoke_test.py</code></td>
+                <td>Manual test script. Not part of automated test suite.</td>
+            </tr>
+            <tr>
+                <td><code>backend/e2e_test.py</code></td>
+                <td>Manual E2E test script. Not part of automated test suite.</td>
+            </tr>
+            <tr>
+                <td><code>backend/test_endpoint.py</code></td>
+                <td>Manual endpoint test script. Not part of automated test suite.</td>
+            </tr>
+            <tr>
+                <td><code>backend/init_db.py</code></td>
+                <td>Redundant — <code>dependencies.py</code> auto-creates tables on import.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr class="section-divider">
+
+    <!-- SECTION 12: KNOWN ISSUES -->
+    <h2>12. Known Issues to Fix</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Issue</th>
+                <th>Location</th>
+                <th>Severity</th>
+                <th>Fix</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Markdown export endpoint missing</td>
+                <td><code>GET /api/v1/export/{id}/markdown</code></td>
+                <td style="color: #dc2626; font-weight: bold;">HIGH</td>
+                <td>Implement endpoint in backend</td>
+            </tr>
+            <tr>
+                <td>GET /session/{id} returns minimal data</td>
+                <td><code>analysis.py:174</code></td>
+                <td style="color: #d97706; font-weight: bold;">MEDIUM</td>
+                <td>Return full report from AnalysisRun</td>
+            </tr>
+            <tr>
+                <td>vercel.json has placeholder URL</td>
+                <td><code>frontend/vercel.json</code></td>
+                <td style="color: #d97706; font-weight: bold;">MEDIUM</td>
+                <td>Replace with actual Render URL before deploying</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr class="section-divider">
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p><strong>SchemaMorph-AI</strong> — Project Requirements & Setup Guide</p>
+        <p>Generated by Senior Project Analysis | September 2, 2026</p>
+        <p>Print this page to PDF: Press <code>Ctrl+P</code> → Save as PDF</p>
+    </div>
+
+</body>
+
+</html>

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 import json
 
 from app.api.dependencies import get_db
+from app.core.security import get_current_user_id
 from app.models.database import Project, ParsedTable, TableDependency, WorkloadQuery, AnalysisRun, ServiceBoundary, QueryRefactoring
 from app.graph.builder import build_graph, serialize_graph
 from app.graph.clusterer import cluster_graph_with_timeout, get_cluster_summary
@@ -25,11 +26,18 @@ class AnalyzeRequest(BaseModel):
 
 
 @router.post("/analyze")
-async def analyze(request: AnalyzeRequest, db: Session = Depends(get_db)):
+async def analyze(
+    request: AnalyzeRequest, 
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_id)
+):
     """
     Run the full analysis pipeline on a project.
     """
-    project = db.query(Project).filter(Project.id == request.session_id).first()
+    project = db.query(Project).filter(
+        Project.id == request.session_id,
+        Project.user_id == current_user_id
+    ).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found.")
 
@@ -141,8 +149,21 @@ async def analyze(request: AnalyzeRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/session/{session_id}")
-async def get_session_result(session_id: str, db: Session = Depends(get_db)):
+async def get_session_result(
+    session_id: str, 
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_id)
+):
     """Fetch the latest analysis run for a project."""
+    
+    # First verify the project belongs to the user
+    project = db.query(Project).filter(
+        Project.id == session_id,
+        Project.user_id == current_user_id
+    ).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+
     run = db.query(AnalysisRun).filter(
         AnalysisRun.project_id == session_id
     ).order_by(AnalysisRun.created_at.desc()).first()
