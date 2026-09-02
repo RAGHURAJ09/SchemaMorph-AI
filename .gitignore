@@ -16,13 +16,6 @@ env/
 .env.local
 .env.production
 
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-schemamorph.db
-schemamorph_v2.db
-
 # pytest
 .pytest_cache/
 .coverage
@@ -46,5 +39,7 @@ Thumbs.db
 # Uploads (schema dumps stored temporarily)
 backend/uploads/
 
-#Extras
-testing_report.md
+# User-managed docs
+KEYS_AND_SERVICES_GUIDE.md
+PROJECT_REQUIREMENTS.html
+part10_testing_risks_roadmap.md

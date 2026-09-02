@@ -73,7 +73,6 @@ export const getSession = async (sessionId) => {
   return data
 }
 
-export const getMarkdownExport = (sessionId) =>
-  `/api/v1/export/${sessionId}/markdown`
+
 
 export default api

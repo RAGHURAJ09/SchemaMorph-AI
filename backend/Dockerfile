@@ -16,4 +16,4 @@ COPY . .
 EXPOSE 8000
 
 # Auto-initialize tables then start server
-CMD ["sh", "-c", "python init_db.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getMarkdownExport } from '../api/client'
+
 import useAnalysisStore from '../store/useAnalysisStore'
 import GraphView from '../components/GraphView'
 import ServicePanel from '../components/ServicePanel'
@@ -41,13 +41,7 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <ValidationBadge validation={validation} />
-          <a
-            href={getMarkdownExport(sessionId)}
-            download
-            className="btn-ghost text-xs py-1.5"
-          >
-            ↓ Export Report
-          </a>
+
         </div>
       </nav>
 
