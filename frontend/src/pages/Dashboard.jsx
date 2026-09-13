@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 
 import useAnalysisStore from '../store/useAnalysisStore'
@@ -32,18 +32,10 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-surface-900 flex flex-col">
-      {/* Top Nav */}
-      <nav className="sticky top-0 z-50 border-b border-surface-700 bg-surface-900/80 backdrop-blur-lg px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="text-brand-400 hover:text-white text-sm transition-colors">← New Analysis</Link>
-          <span className="text-surface-600">|</span>
-          <span className="gradient-text font-bold text-lg">SchemaMorph AI</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <ValidationBadge validation={validation} />
-
-        </div>
-      </nav>
+      {/* Validation badge bar */}
+      <div className="sticky top-0 z-40 border-b border-surface-700 bg-surface-900/80 backdrop-blur-lg px-6 py-2 flex items-center justify-end">
+        <ValidationBadge validation={validation} />
+      </div>
 
       {/* Stats bar */}
       <StatsBar summary={summary} />
