@@ -14,7 +14,11 @@ from app.core.security import create_access_token
 
 # Use synchronous TestClient (no async needed)
 client = TestClient(app)
-test_token = create_access_token("test-user-uuid-1234")
+
+# Ensure a test user exists in DB and get JWT
+client.post("/api/v1/auth/register", json={"email": "pipeline_tester@schemamorph.ai", "password": "TestPassword123!"})
+login_resp = client.post("/api/v1/auth/login", json={"email": "pipeline_tester@schemamorph.ai", "password": "TestPassword123!"})
+test_token = login_resp.json().get("access_token", "")
 client.headers.update({"Authorization": f"Bearer {test_token}"})
 
 SIMPLE_SCHEMA = """
