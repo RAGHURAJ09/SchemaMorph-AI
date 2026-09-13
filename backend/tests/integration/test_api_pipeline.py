@@ -10,8 +10,12 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 
+from app.core.security import create_access_token
+
 # Use synchronous TestClient (no async needed)
 client = TestClient(app)
+test_token = create_access_token("test-user-uuid-1234")
+client.headers.update({"Authorization": f"Bearer {test_token}"})
 
 SIMPLE_SCHEMA = """
 CREATE TABLE users (

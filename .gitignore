@@ -10,6 +10,9 @@ venv/
 .venv/
 env/
 *.egg
+*.db
+*.sqlite
+*.sqlite3
 
 # Env files (all .env files at any depth)
 .env

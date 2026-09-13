@@ -25,39 +25,36 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Create an Account</h1>
-          <p className="text-slate-500 mt-2">Sign up to get started with SchemaMorph-AI</p>
+    <div style={{ minHeight:'100vh', background:'radial-gradient(ellipse 60% 40% at 50% 0%,rgba(83,74,183,0.1) 0%,transparent 60%),#090c12', display:'flex', alignItems:'center', justifyContent:'center', padding:'24px', fontFamily:'Inter,system-ui,sans-serif' }}>
+      <div style={{ maxWidth:420, width:'100%', background:'rgba(255,255,255,0.03)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:18, padding:'40px 32px' }}>
+        <div style={{ textAlign:'center', marginBottom:36 }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:'#1D9E75', display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:700, color:'#fff', fontFamily:'Space Grotesk,sans-serif', marginBottom:16 }}>S</div>
+          <h1 style={{ fontFamily:'Space Grotesk,sans-serif', fontSize:24, fontWeight:700, color:'#fff', margin:'0 0 8px' }}>Create an Account</h1>
+          <p style={{ fontSize:14, color:'rgba(255,255,255,0.4)', margin:0 }}>Sign up to get started with SchemaMorph AI</p>
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Email Address
-            </label>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom:20 }}>
+            <label style={{ display:'block', fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.6)', marginBottom:8, fontFamily:'Space Grotesk,sans-serif' }}>Email Address</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              style={{ width:'100%', padding:'12px 14px', background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.12)', borderRadius:10, fontSize:14, color:'#fff', outline:'none', transition:'border-color 0.2s', fontFamily:'Inter,sans-serif' }}
               placeholder="you@example.com"
             />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Password
-            </label>
+          <div style={{ marginBottom:28 }}>
+            <label style={{ display:'block', fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.6)', marginBottom:8, fontFamily:'Space Grotesk,sans-serif' }}>Password</label>
             <input
               type="password"
               required
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              style={{ width:'100%', padding:'12px 14px', background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.12)', borderRadius:10, fontSize:14, color:'#fff', outline:'none', transition:'border-color 0.2s', fontFamily:'Inter,sans-serif' }}
               placeholder="••••••••"
             />
           </div>
@@ -65,17 +62,15 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-70"
+            style={{ width:'100%', padding:'13px', background:'#1D9E75', color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:600, fontFamily:'Space Grotesk,sans-serif', cursor:loading?'not-allowed':'pointer', opacity:loading?0.7:1, transition:'opacity 0.2s' }}
           >
             {loading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-600">
+        <p style={{ marginTop:24, textAlign:'center', fontSize:13, color:'rgba(255,255,255,0.38)' }}>
           Already have an account?{' '}
-          <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-            Log in
-          </Link>
+          <Link to="/login" style={{ color:'#1D9E75', textDecoration:'none', fontWeight:600 }}>Log in</Link>
         </p>
       </div>
     </div>

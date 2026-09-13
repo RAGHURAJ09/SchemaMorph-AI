@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import Landing from './pages/Landing'
 import Upload from './pages/Upload'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
@@ -44,19 +45,21 @@ export default function App() {
   return (
     <>
       <Toaster position="top-right" />
-      <Navbar />
       <Routes>
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
-        <Route path="/" element={
+        <Route path="/upload" element={
           <ProtectedRoute>
+            <Navbar />
             <Upload />
           </ProtectedRoute>
         } />
         
         <Route path="/dashboard/:sessionId" element={
           <ProtectedRoute>
+            <Navbar />
             <Dashboard />
           </ProtectedRoute>
         } />
