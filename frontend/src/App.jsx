@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import Landing from './pages/Landing'
@@ -6,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import useAuthStore from './store/authStore'
+import WebGLLoader from './components/WebGLLoader'
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore((state) => state.token)
@@ -42,8 +44,13 @@ function Navbar() {
 }
 
 export default function App() {
+  const [loaded, setLoaded] = useState(false)
+  const onLoaderDone = useCallback(() => setLoaded(true), [])
+
   return (
     <>
+      <style>{``}</style>
+      {!loaded && <WebGLLoader onComplete={onLoaderDone} />}
       <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Landing />} />
