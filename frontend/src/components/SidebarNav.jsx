@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 
 const NAV_ITEMS = [
-  { icon: '⌂', label: 'Home', to: '/' },
+  { icon: '⌂', label: 'Home', to: '/upload' },
   { icon: '📤', label: 'New Analysis', to: '/upload' },
   { icon: '📊', label: 'Dashboard', to: null },
 ]
@@ -29,14 +29,23 @@ export default function SidebarNav() {
 
   return (
     <nav
-      className="fixed top-0 left-0 h-full z-50 bg-surface-900 border-r border-surface-700 flex flex-col transition-all duration-200 ease-in-out"
-      style={{ width: expanded ? 240 : 64 }}
+      className="fixed top-0 left-0 h-full z-50 flex flex-col transition-all duration-200 ease-in-out"
+      style={{
+        width: expanded ? 240 : 64,
+        background: expanded ? 'rgba(15,15,20,0.95)' : 'rgba(15,15,20,0.8)',
+        backdropFilter: 'blur(16px)',
+        borderRadius: expanded ? '0 16px 16px 0' : '0 12px 12px 0',
+        boxShadow: expanded
+          ? '4px 0 24px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.06)'
+          : '2px 0 12px rgba(0,0,0,0.3), 0 0 0 0.5px rgba(255,255,255,0.04)',
+        borderRight: 'none',
+      }}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 h-14 shrink-0 border-b border-surface-700">
-        <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+      <div className="flex items-center gap-3 px-4 h-14 shrink-0" style={{ borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0" style={{ background: '#1D9E75' }}>
           S
         </div>
         <span
@@ -55,9 +64,14 @@ export default function SidebarNav() {
             <div
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
                 ${active
-                  ? 'bg-brand-500/20 text-brand-400'
-                  : 'text-surface-400 hover:bg-surface-700 hover:text-white'
+                  ? 'text-emerald-400'
+                  : 'text-gray-400 hover:text-white'
                 }`}
+              style={{
+                background: active ? 'rgba(29,158,117,0.15)' : 'transparent',
+              }}
+              onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
             >
               <span className="text-lg shrink-0 w-5 text-center">{item.icon}</span>
               <span
@@ -85,9 +99,9 @@ export default function SidebarNav() {
       </div>
 
       {/* User section */}
-      <div className="border-t border-surface-700 px-2 py-3 space-y-1">
+      <div className="px-2 py-3 space-y-1" style={{ borderTop: '0.5px solid rgba(255,255,255,0.07)' }}>
         <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-8 h-8 rounded-full bg-brand-500/30 flex items-center justify-center text-brand-400 text-xs font-bold shrink-0">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ background: 'rgba(29,158,117,0.25)', color: '#5DCAA5' }}>
             {user.email?.charAt(0).toUpperCase()}
           </div>
           <span
@@ -99,7 +113,10 @@ export default function SidebarNav() {
         </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-150"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150"
+          style={{ color: '#f87171' }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(248,113,113,0.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
           <span className="text-lg shrink-0 w-5 text-center">⏻</span>
           <span

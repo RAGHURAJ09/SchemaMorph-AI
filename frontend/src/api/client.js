@@ -73,6 +73,16 @@ export const getSession = async (sessionId) => {
   return data
 }
 
+// ── Projects / History ────────────────────────────────────────────────────
 
+export const getProjects = async () => {
+  const { data } = await api.get('/projects')
+  return data
+}
+
+export const deleteProject = async (projectId) => {
+  const { data } = await api.delete(`/projects/${projectId}`)
+  return data
+}
 
 export default api

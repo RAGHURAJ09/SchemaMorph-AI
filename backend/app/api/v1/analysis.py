@@ -173,3 +173,68 @@ async def get_session_result(
     
     return {"status": run.status, "run_id": run.id, "validation": run.validation_summary}
 
+
+@router.get("/projects")
+async def list_projects(
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_id)
+):
+    """List all projects for the current user, with summary stats for History page."""
+    projects = db.query(Project).filter(
+        Project.user_id == current_user_id
+    ).order_by(Project.created_at.desc()).all()
+
+    result = []
+    for p in projects:
+        # Count tables
+        table_count = db.query(ParsedTable).filter(ParsedTable.project_id == p.id).count()
+
+        # Get latest analysis run
+        latest_run = db.query(AnalysisRun).filter(
+            AnalysisRun.project_id == p.id
+        ).order_by(AnalysisRun.created_at.desc()).first()
+
+        service_count = 0
+        broken_query_count = 0
+        status = "PENDING"
+
+        if latest_run:
+            status = latest_run.status
+            service_count = db.query(ServiceBoundary).filter(
+                ServiceBoundary.run_id == latest_run.id
+            ).count()
+            broken_query_count = db.query(QueryRefactoring).filter(
+                QueryRefactoring.run_id == latest_run.id
+            ).count()
+
+        result.append({
+            "id": p.id,
+            "name": p.name,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+            "status": status,
+            "table_count": table_count,
+            "service_count": service_count,
+            "broken_query_count": broken_query_count,
+        })
+
+    return result
+
+
+@router.delete("/projects/{project_id}")
+async def delete_project(
+    project_id: str,
+    db: Session = Depends(get_db),
+    current_user_id: str = Depends(get_current_user_id)
+):
+    """Delete a project and all its associated data."""
+    project = db.query(Project).filter(
+        Project.id == project_id,
+        Project.user_id == current_user_id
+    ).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    db.delete(project)
+    db.commit()
+    return {"message": "Project deleted successfully."}
+
+
