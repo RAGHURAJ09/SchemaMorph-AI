@@ -181,7 +181,27 @@ export default function Sidebar({ collapsed, onToggle }) {
             return (
               <button
                 key={item.id}
-                onClick={() => navigate(item.to)}
+                onClick={() => {
+                  if (item.id === 'dashboard') {
+                    // Check if we have an active session in local storage
+                    const stored = localStorage.getItem('schemamorph-analysis-storage')
+                    let sid = null
+                    try {
+                      if (stored) {
+                        const parsed = JSON.parse(stored)
+                        sid = parsed.state?.analysisData?.session_id
+                      }
+                    } catch (e) {}
+                    
+                    if (sid) {
+                      navigate(`/dashboard/${sid}`)
+                    } else {
+                      navigate('/upload') // No active analysis, redirect to upload
+                    }
+                  } else {
+                    navigate(item.to)
+                  }
+                }}
                 title={collapsed ? item.label : undefined}
                 style={{
                   width: '100%',

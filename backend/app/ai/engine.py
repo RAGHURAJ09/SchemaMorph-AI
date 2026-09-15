@@ -41,14 +41,17 @@ def run_analysis(
     """
     Call Gemini API via LangChain to generate service boundaries.
     """
+    from dotenv import load_dotenv
+    load_dotenv(override=True)  # Ensure .env is read and overrides stale vars
+
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
 
     if not api_key:
-        return _fallback(cluster_summaries, query_analyses, reason="No API key provided")
+        return _fallback(cluster_summaries, query_analyses, reason="No API key provided in .env")
 
     # Initialize LangChain LLM
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash",
+        model="gemini-3.5-flash",
         temperature=0.2,
         google_api_key=api_key,
         max_output_tokens=4096,

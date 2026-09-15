@@ -101,6 +101,7 @@ def serialize_graph(G: nx.Graph, partition: Dict[str, int]) -> dict:
             "is_hub": attrs.get("is_hub", False),
             "is_isolated": attrs.get("is_isolated", False),
             "column_count": attrs.get("column_count", 0),
+            "incoming_fk_count": attrs.get("incoming_fk_count", 0),
             "degree_centrality": attrs.get("degree_centrality", 0.0),
             "betweenness_centrality": attrs.get("betweenness_centrality", 0.0),
         })

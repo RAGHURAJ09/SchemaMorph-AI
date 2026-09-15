@@ -131,23 +131,74 @@ def _table_to_ddl(tname, tdata, fk_by_table, service_tables, removed_fks_acc) ->
     # FK constraints
     for fk in fk_by_table.get(tname, []):
         from_c = ", ".join(fk["from_columns"])
-        to_c = ", ".join(fk["to_columns"])
+        to_c   = ", ".join(fk["to_columns"])
+
         if fk["to_table"] in service_tables:
+            # ── Intra-service FK: keep as-is ─────────────────────────────────
             col_lines.append(
                 f"  FOREIGN KEY ({from_c}) REFERENCES {fk['to_table']} ({to_c})"
             )
         else:
-            # Cross-service FK — remove from DDL and record it
+            # ── Cross-service FK: cannot be a DB-level constraint when each
+            #    service owns its own database.  Show 4 implementation options
+            #    so the developer can choose the right strategy. ────────────────
+            service_name = fk["to_table"].replace("_", " ").title()
             col_lines.append(
-                f"  -- REMOVED FK: {from_c} → {fk['to_table']}.{to_c}  "
-                f"(cross-service: {fk['to_table']} belongs to another service)"
+                f"\n"
+                f"  -- ╔══ CROSS-SERVICE RELATIONSHIP ══════════════════════════════════════╗\n"
+                f"  -- ║  {from_c} → {fk['to_table']}.{to_c}\n"
+                f"  -- ║  '{fk['to_table']}' belongs to a different service.\n"
+                f"  -- ║  Choose ONE of the following implementation strategies:\n"
+                f"  -- ╠══════════════════════════════════════════════════════════════════════╣\n"
+                f"  -- ║  [1] SHARED DATABASE  — keep the FK if both services share one DB:\n"
+                f"  -- ║      FOREIGN KEY ({from_c}) REFERENCES {fk['to_table']} ({to_c})\n"
+                f"  -- ║\n"
+                f"  -- ║  [2] API COMPOSITION  — validate via HTTP call before insert:\n"
+                f"  -- ║      GET /api/{fk['to_table']}/{{id}}  → 200 OK before writing\n"
+                f"  -- ║\n"
+                f"  -- ║  [3] EVENT-DRIVEN     — subscribe to {service_name}Created events,\n"
+                f"  -- ║      cache ids locally in a lookup table for fast validation.\n"
+                f"  -- ║\n"
+                f"  -- ║  [4] SAGA PATTERN     — use a distributed saga / outbox for\n"
+                f"  -- ║      transactional consistency across service boundaries.\n"
+                f"  -- ╚══════════════════════════════════════════════════════════════════════╝"
             )
             removed_fks_acc.append({
-                "from_table": tname,
+                "from_table":   tname,
                 "from_columns": fk["from_columns"],
-                "to_table": fk["to_table"],
-                "to_columns": fk["to_columns"],
-                "reason": f"{fk['to_table']} belongs to a different service",
+                "to_table":     fk["to_table"],
+                "to_columns":   fk["to_columns"],
+                "reason": (
+                    f"Cross-service boundary: '{fk['to_table']}' belongs to a different service. "
+                    f"Implement via: [1] Shared DB FK  [2] API Composition  "
+                    f"[3] Event-Driven Sync  [4] Saga Pattern"
+                ),
+                "strategies": [
+                    {
+                        "id": "shared_db",
+                        "name": "Shared Database",
+                        "description": f"Keep the FK if both services share one database.",
+                        "sql": f"FOREIGN KEY ({from_c}) REFERENCES {fk['to_table']} ({to_c})",
+                    },
+                    {
+                        "id": "api_composition",
+                        "name": "API Composition",
+                        "description": f"Validate {from_c} by calling the {fk['to_table']} service REST API before any INSERT.",
+                        "sql": None,
+                    },
+                    {
+                        "id": "event_driven",
+                        "name": "Event-Driven Sync",
+                        "description": f"Subscribe to {service_name}Created events and cache {to_c} locally in a lookup table.",
+                        "sql": None,
+                    },
+                    {
+                        "id": "saga",
+                        "name": "Saga Pattern",
+                        "description": "Use a choreography or orchestration saga with compensating transactions.",
+                        "sql": None,
+                    },
+                ],
             })
 
     body = ",\n".join(col_lines)
