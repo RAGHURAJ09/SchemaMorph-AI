@@ -3,6 +3,7 @@ Authentication endpoints: register and login.
 """
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
@@ -25,17 +26,34 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+ALLOWED_DOMAINS = {"gmail.com", "gla.ac.in", "yahoo.com", "outlook.com", "hotmail.com"}
+
+def normalize_email(email: str) -> str:
+    return email.strip().lower()
+
 @router.post("/register", status_code=201)
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
     """Create a new user account."""
-    if db.query(User).filter(User.email == req.email).first():
+    email = normalize_email(req.email)
+    domain = email.split("@")[-1]
+    if domain not in ALLOWED_DOMAINS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Email domain '@{domain}' is not allowed. Please use a supported provider."
+        )
+
+    if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=409, detail="Email already registered.")
     if len(req.password) < 6:
         raise HTTPException(status_code=422, detail="Password must be at least 6 characters.")
 
-    user = User(email=req.email, password_hash=hash_password(req.password))
+    user = User(email=email, password_hash=hash_password(req.password))
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Email already registered.")
     db.refresh(user)
     return {"id": user.id, "email": user.email, "created_at": user.created_at}
 
@@ -43,7 +61,8 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
 @router.post("/login", response_model=TokenResponse)
 def login(req: LoginRequest, db: Session = Depends(get_db)):
     """Exchange credentials for a JWT access token."""
-    user = db.query(User).filter(User.email == req.email).first()
+    email = normalize_email(req.email)
+    user = db.query(User).filter(User.email == email).first()
     if not user or not verify_password(req.password, user.password_hash):
         raise HTTPException(
             status_code=401,

@@ -10,6 +10,9 @@ FIXES applied:
   Bug 4: query all_tables re-parsed with query_parser (was always [])
   Bug 5: table_count / fk_count set on schema_result (was missing -> AI prompt got 0/0)
 """
+import asyncio
+import os
+
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
@@ -22,7 +25,7 @@ from app.models.database import (
 )
 from app.graph.builder import build_graph, serialize_graph
 from app.graph.clusterer import cluster_graph_with_timeout, get_cluster_summary
-from app.ai.engine import run_analysis
+from app.ai.engine import run_analysis, _fallback
 from app.validation.validator import validate_analysis
 from app.reports.generator import generate_report
 from app.parsers.schema_parser import _compute_table_metrics
@@ -158,7 +161,26 @@ async def analyze(
     cluster_summaries = get_cluster_summary(partition, schema_result)
 
     # ---- 6. AI narration (LangChain / Gemini) --------------------------------
-    ai_result = run_analysis(cluster_summaries, query_analyses, schema_result)
+    # Keep the deterministic graph result responsive when the external AI API
+    # is slow or unavailable. The worker may finish later, but this request
+    # returns a complete fallback report instead of hanging.
+    ai_timeout = max(1, int(os.getenv("AI_ANALYSIS_TIMEOUT_SECONDS", "8")))
+    try:
+        ai_result = await asyncio.wait_for(
+            asyncio.to_thread(
+                run_analysis,
+                cluster_summaries,
+                query_analyses,
+                schema_result,
+            ),
+            timeout=ai_timeout,
+        )
+    except asyncio.TimeoutError:
+        ai_result = _fallback(
+            cluster_summaries,
+            query_analyses,
+            reason=f"AI narration timed out after {ai_timeout} seconds",
+        )
     if timeout_warning:
         ai_result["general_recommendations"] = [
             timeout_warning
@@ -211,6 +233,10 @@ async def analyze(
         graph_data=graph_data,
     )
     report["run_id"] = run.id
+
+    run.report_data = report
+    db.commit()
+
     return report
 
 
@@ -237,6 +263,9 @@ async def get_session_result(
             status_code=404,
             detail="No analysis result yet. Call POST /analyze first."
         )
+
+    if run.report_data:
+        return run.report_data
 
     return {"status": run.status, "run_id": run.id, "validation": run.validation_summary}
 

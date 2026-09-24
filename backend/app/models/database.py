@@ -111,6 +111,7 @@ class AnalysisRun(Base):
     project_id = Column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
     status = Column(String(50), nullable=False)  # 'PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'
     validation_summary = Column(JSON, nullable=True)  # High-level validation output
+    report_data = Column(JSON, nullable=True)  # Store the full generated report
     created_at = Column(DateTime(timezone=True), default=utc_now)
 
     # Relationships

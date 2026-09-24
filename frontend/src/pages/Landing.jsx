@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 /* ─── Data ─────────────────────────────────────────────────── */
+import Background3D from "../components/Background3D";
 const TEAM = [
   { name:"Raghuraj Pratap Rajpoot", role:"Lead & Architect", avatar:"RR", color:"#1D9E75", bg:"rgba(29,158,117,0.12)", desc:"Graph analysis engine, AI pipeline, backend architecture" },
   { name:"Samridhi Singh", role:"Frontend Engineer", avatar:"SS", color:"#534AB7", bg:"rgba(83,74,183,0.12)", desc:"React Flow visualization, UI design, Zustand state management" },
@@ -32,125 +33,7 @@ const SERVICES = [
 ];
 const EDGES = [[0,1],[0,3],[1,2],[1,3],[2,4],[3,4],[4,5],[1,5]];
 
-/* ─── Graph Background Canvas ───────────────────────────────── */
-function GraphBackground() {
-  const canvasRef = useRef(null);
-  const nodesRef = useRef([]);
-  const mouseRef = useRef({ x:-999, y:-999 });
-  const dragNodeRef = useRef(null);
-  const animRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const COLORS = ["#1D9E75","#534AB7","#185FA5","#BA7517","#993556"];
-    const LABELS = ["users","orders","products","inventory","payments","sessions","analytics","logs","events","services","clusters","schemas","tables","edges","nodes","auth"];
-    let W, H, t = 0;
-
-    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-    resize();
-    window.addEventListener("resize", resize);
-
-    if (!nodesRef.current.length) {
-      for (let i = 0; i < 40; i++) {
-        nodesRef.current.push({
-          x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight,
-          vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
-          r: 3+Math.random()*5,
-          color: COLORS[Math.floor(Math.random()*COLORS.length)],
-          label: LABELS[Math.floor(Math.random()*LABELS.length)],
-          pulse: Math.random()*Math.PI*2,
-        });
-      }
-    }
-    const nodes = nodesRef.current;
-
-    const onMove = e => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-      if (dragNodeRef.current) { dragNodeRef.current.x = e.clientX; dragNodeRef.current.y = e.clientY; }
-    };
-    const onDown = e => {
-      let closest = null, best = Infinity;
-      nodes.forEach(n => { const d = Math.hypot(n.x-e.clientX, n.y-e.clientY); if (d < 30 && d < best) { best=d; closest=n; } });
-      if (closest) dragNodeRef.current = closest;
-    };
-    const onUp = () => {
-      if (dragNodeRef.current) { dragNodeRef.current.vx=(Math.random()-.5)*2; dragNodeRef.current.vy=(Math.random()-.5)*2; }
-      dragNodeRef.current = null;
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("mouseup", onUp);
-
-    function draw() {
-      ctx.clearRect(0,0,W,H);
-      ctx.fillStyle="#090c12"; ctx.fillRect(0,0,W,H);
-      t += .012;
-      // grid
-      ctx.strokeStyle="rgba(29,158,117,0.04)"; ctx.lineWidth=.5;
-      for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-      for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-
-      nodes.forEach((n,i) => {
-        n.pulse+=.02;
-        if(n!==dragNodeRef.current){
-          n.x+=n.vx; n.y+=n.vy;
-          if(n.x<0||n.x>W) n.vx*=-1;
-          if(n.y<0||n.y>H) n.vy*=-1;
-          const dx=n.x-mouseRef.current.x, dy=n.y-mouseRef.current.y, d=Math.hypot(dx,dy);
-          if(d<130){n.vx+=dx/d*.15; n.vy+=dy/d*.15;}
-          n.vx*=.995; n.vy*=.995;
-        }
-        nodes.forEach((m,j) => {
-          if(j<=i) return;
-          const dx=m.x-n.x, dy=m.y-n.y, d=Math.hypot(dx,dy);
-          if(d<160){
-            const alpha=(1-d/160)*.3;
-            const grad=ctx.createLinearGradient(n.x,n.y,m.x,m.y);
-            grad.addColorStop(0,n.color+"66"); grad.addColorStop(1,m.color+"66");
-            ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(m.x,m.y);
-            ctx.strokeStyle=grad; ctx.lineWidth=alpha*2.5; ctx.stroke();
-            if(d<100&&Math.sin(t*3+i*.7)>.6){
-              const p=((t*.4+i*.1)%1);
-              ctx.beginPath();ctx.arc(n.x+dx*p,n.y+dy*p,2,0,Math.PI*2);
-              ctx.fillStyle=n.color+"cc"; ctx.fill();
-            }
-          }
-        });
-      });
-
-      nodes.forEach((n,i) => {
-        const glow=Math.sin(n.pulse)*.3+.7;
-        ctx.beginPath();ctx.arc(n.x,n.y,n.r+4,0,Math.PI*2);
-        ctx.strokeStyle=n.color+Math.floor(glow*60).toString(16).padStart(2,"0");
-        ctx.lineWidth=.8; ctx.stroke();
-        ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
-        ctx.fillStyle=n.color+Math.floor(glow*220).toString(16).padStart(2,"0");
-        ctx.fill();
-        if(n===dragNodeRef.current){
-          ctx.beginPath();ctx.arc(n.x,n.y,n.r+8,0,Math.PI*2);
-          ctx.strokeStyle=n.color+"aa"; ctx.lineWidth=1.5; ctx.stroke();
-        }
-        if(n.r>6&&i%4===0){
-          ctx.font="500 9px 'Space Grotesk',sans-serif";
-          ctx.fillStyle=n.color+"88"; ctx.fillText(n.label,n.x+n.r+4,n.y+3);
-        }
-      });
-
-      animRef.current = requestAnimationFrame(draw);
-    }
-    draw();
-    return () => {
-      cancelAnimationFrame(animRef.current);
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} style={{ position:"fixed", top:0, left:0, width:"100%", height:"100%", zIndex:0, pointerEvents:"none" }} />;
-}
+/* ─── Graph Background Canvas removed for 3D version ───────────────────────────────── */
 
 /* ─── Dashboard Canvas (drag-interactive) ───────────────────── */
 function DashboardCanvas() {
@@ -539,8 +422,8 @@ export default function Landing() {
         @keyframes blink{50%{opacity:0}}
         @keyframes pulse{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.22);opacity:0}}
       `}</style>
-      <GraphBackground/>
-      <div style={{ position:"relative",zIndex:1,minHeight:"100vh",background:"#090c12",overflowX:"hidden" }}>
+      <Background3D/>
+      <div style={{ position:"relative",zIndex:1,minHeight:"100vh",background:"transparent",overflowX:"hidden" }}>
         <NavBar page={page} setPage={setPage}/>
         {page==="home" ? (
           <>

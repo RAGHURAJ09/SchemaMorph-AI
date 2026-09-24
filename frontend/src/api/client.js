@@ -19,15 +19,25 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      useAuthStore.getState().logout()
+    }
+    return Promise.reject(error)
+  }
+)
+
 // ── Auth ────────────────────────────────────────────────────────────────────
 
 export const login = async (email, password) => {
-  const { data } = await api.post('/auth/login', { email, password })
+  const { data } = await api.post('/auth/login', { email: email.trim().toLowerCase(), password })
   return data
 }
 
 export const register = async (email, password) => {
-  const { data } = await api.post('/auth/register', { email, password })
+  const { data } = await api.post('/auth/register', { email: email.trim().toLowerCase(), password })
   return data
 }
 

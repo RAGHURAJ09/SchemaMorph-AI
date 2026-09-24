@@ -55,6 +55,8 @@ def run_analysis(
         temperature=0.2,
         google_api_key=api_key,
         max_output_tokens=4096,
+        timeout=8,
+        max_retries=0,
     )
 
     # Initialize Parser
