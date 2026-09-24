@@ -2,18 +2,21 @@
 FastAPI Dependencies for Database Access.
 """
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 from app.models.database import Base
 
 DATABASE_URL = os.getenv("DATABASE_URL") or "sqlite:///./schemamorph.db"
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-engine = create_engine(DATABASE_URL, pool_pre_ping=True, connect_args=connect_args)
+# Use NullPool for Supabase pooler to prevent connection exhaustion during dev reloads
+pool_kwargs = {"poolclass": NullPool} if "pooler.supabase.com" in DATABASE_URL else {"pool_pre_ping": True}
+engine = create_engine(DATABASE_URL, connect_args=connect_args, **pool_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 try:

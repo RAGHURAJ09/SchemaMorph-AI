@@ -4,9 +4,9 @@ Run: python run.py
 """
 import uvicorn
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 if __name__ == "__main__":
     host = os.getenv("APP_HOST", "0.0.0.0")

@@ -5,9 +5,9 @@ Handles password hashing, token creation, and current user extraction.
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 from jose import jwt, JWTError
 from passlib.context import CryptContext

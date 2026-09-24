@@ -41,8 +41,8 @@ def run_analysis(
     """
     Call Gemini API via LangChain to generate service boundaries.
     """
-    from dotenv import load_dotenv
-    load_dotenv(override=True)  # Ensure .env is read and overrides stale vars
+    from dotenv import load_dotenv, find_dotenv
+    load_dotenv(find_dotenv(), override=True)  # Ensure .env is read and overrides stale vars
 
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
 
