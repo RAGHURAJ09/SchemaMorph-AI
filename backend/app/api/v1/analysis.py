@@ -275,39 +275,66 @@ async def list_projects(
     db: Session = Depends(get_db),
     current_user_id: str = Depends(get_current_user_id)
 ):
+    from sqlalchemy import func
     """List all projects for the current user, with summary stats for History page."""
     projects = db.query(Project).filter(
         Project.user_id == current_user_id
     ).order_by(Project.created_at.desc()).all()
+    
+    if not projects:
+        return []
+
+    project_ids = [p.id for p in projects]
+
+    table_counts = dict(
+        db.query(ParsedTable.project_id, func.count(ParsedTable.id))
+        .filter(ParsedTable.project_id.in_(project_ids))
+        .group_by(ParsedTable.project_id)
+        .all()
+    )
+
+    all_runs = db.query(AnalysisRun).filter(AnalysisRun.project_id.in_(project_ids)).all()
+    all_runs.sort(key=lambda r: (r.created_at is not None, r.created_at), reverse=True)
+    
+    latest_runs = {}
+    for r in all_runs:
+        if r.project_id not in latest_runs:
+            latest_runs[r.project_id] = r
+
+    run_ids = [r.id for r in latest_runs.values()]
+
+    if run_ids:
+        service_counts = dict(
+            db.query(ServiceBoundary.run_id, func.count(ServiceBoundary.id))
+            .filter(ServiceBoundary.run_id.in_(run_ids))
+            .group_by(ServiceBoundary.run_id)
+            .all()
+        )
+        broken_query_counts = dict(
+            db.query(QueryRefactoring.run_id, func.count(QueryRefactoring.id))
+            .filter(QueryRefactoring.run_id.in_(run_ids))
+            .group_by(QueryRefactoring.run_id)
+            .all()
+        )
+    else:
+        service_counts = {}
+        broken_query_counts = {}
 
     result = []
     for p in projects:
-        table_count = db.query(ParsedTable).filter(ParsedTable.project_id == p.id).count()
-        latest_run = db.query(AnalysisRun).filter(
-            AnalysisRun.project_id == p.id
-        ).order_by(AnalysisRun.created_at.desc()).first()
-
-        service_count = 0
-        broken_query_count = 0
-        status = "PENDING"
-
-        if latest_run:
-            status = latest_run.status
-            service_count = db.query(ServiceBoundary).filter(
-                ServiceBoundary.run_id == latest_run.id
-            ).count()
-            broken_query_count = db.query(QueryRefactoring).filter(
-                QueryRefactoring.run_id == latest_run.id
-            ).count()
+        run = latest_runs.get(p.id)
+        status = run.status if run else "PENDING"
+        svc_count = service_counts.get(run.id, 0) if run else 0
+        bq_count = broken_query_counts.get(run.id, 0) if run else 0
 
         result.append({
             "id":                 p.id,
             "name":               p.name,
             "created_at":         p.created_at.isoformat() if p.created_at else None,
             "status":             status,
-            "table_count":        table_count,
-            "service_count":      service_count,
-            "broken_query_count": broken_query_count,
+            "table_count":        table_counts.get(p.id, 0),
+            "service_count":      svc_count,
+            "broken_query_count": bq_count,
         })
 
     return result

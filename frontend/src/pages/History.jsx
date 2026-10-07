@@ -99,6 +99,7 @@ export default function History() {
   const handleView = async (project) => {
     try {
       const { data } = await api.get(`/session/${project.id}`)
+      setAnalysisData(data)
       toast.success('Session loaded!')
       navigate(`/dashboard/${project.id}`)
     } catch {

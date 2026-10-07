@@ -21,7 +21,7 @@ export default function FloatingNav() {
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  const goHome = () => navigate(token ? '/upload' : '/')
+  const goHome = () => navigate('/')
 
   const handleLogout = () => {
     logout()

@@ -140,7 +140,7 @@ export default function Navbar() {
             paddingRight: 16,
             borderRight: '1px solid rgba(255,255,255,0.06)',
           }}
-          onClick={() => navigate('/upload')}
+          onClick={() => navigate('/')}
           className="brand-logo"
         >
            <div style={{

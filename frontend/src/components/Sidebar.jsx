@@ -121,7 +121,7 @@ export default function Sidebar({ collapsed, onToggle }) {
           borderBottom: '1px solid rgba(255,255,255,0.05)',
           cursor: 'pointer', flexShrink: 0,
           transition: 'padding 0.25s',
-        }} onClick={() => navigate('/upload')}>
+        }} onClick={() => navigate('/')}>
           <div style={{
             width: 32, height: 32, borderRadius: 9,
             background: 'linear-gradient(135deg, #1D9E75, #0d6e52)',

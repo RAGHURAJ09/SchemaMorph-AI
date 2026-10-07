@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import useAuthStore from "../store/authStore";
 
 /* ─── Data ─────────────────────────────────────────────────── */
 import Background3D from "../components/Background3D";
@@ -231,6 +232,8 @@ function FadeIn({ children, i=0, style={} }) {
 /* ─── Navbar ─────────────────────────────────────────────────── */
 function NavBar({ page, setPage }) {
   const navigate = useNavigate();
+  const token = useAuthStore(s => s.token);
+  const logout = useAuthStore(s => s.logout);
   const [scrolled, setScrolled] = useState(false);
   useEffect(()=>{ const fn=()=>setScrolled(window.scrollY>20); window.addEventListener("scroll",fn); return()=>window.removeEventListener("scroll",fn); },[]);
   const go = (n) => {
@@ -249,8 +252,17 @@ function NavBar({ page, setPage }) {
         {["Home","How it works","Features","Team"].map(n=>(
           <button key={n} onClick={()=>go(n)} style={{ background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.58)",fontSize:13,fontWeight:500,padding:"6px 12px",borderRadius:6,fontFamily:"Space Grotesk,sans-serif" }}>{n}</button>
         ))}
-        <button onClick={()=>navigate("/login")} style={{ marginLeft:10,background:"transparent",color:"rgba(255,255,255,0.8)",border:"0.5px solid rgba(255,255,255,0.2)",padding:"7px 16px",borderRadius:8,fontSize:13,fontWeight:500,fontFamily:"Space Grotesk,sans-serif",cursor:"pointer" }}>Log in</button>
-        <button onClick={()=>navigate("/register")} style={{ marginLeft:6,background:"#1D9E75",color:"#fff",padding:"7px 16px",borderRadius:8,fontSize:13,fontWeight:600,fontFamily:"Space Grotesk,sans-serif",cursor:"pointer" }}>Sign up →</button>
+        {token ? (
+          <>
+            <button onClick={()=>navigate("/upload")} style={{ marginLeft:10,background:"transparent",color:"rgba(255,255,255,0.8)",border:"0.5px solid rgba(255,255,255,0.2)",padding:"7px 16px",borderRadius:8,fontSize:13,fontWeight:500,fontFamily:"Space Grotesk,sans-serif",cursor:"pointer" }}>Dashboard</button>
+            <button onClick={()=>{logout(); navigate("/");}} style={{ marginLeft:6,background:"#1D9E75",color:"#fff",padding:"7px 16px",borderRadius:8,fontSize:13,fontWeight:600,fontFamily:"Space Grotesk,sans-serif",cursor:"pointer" }}>Log out</button>
+          </>
+        ) : (
+          <>
+            <button onClick={()=>navigate("/login")} style={{ marginLeft:10,background:"transparent",color:"rgba(255,255,255,0.8)",border:"0.5px solid rgba(255,255,255,0.2)",padding:"7px 16px",borderRadius:8,fontSize:13,fontWeight:500,fontFamily:"Space Grotesk,sans-serif",cursor:"pointer" }}>Log in</button>
+            <button onClick={()=>navigate("/register")} style={{ marginLeft:6,background:"#1D9E75",color:"#fff",padding:"7px 16px",borderRadius:8,fontSize:13,fontWeight:600,fontFamily:"Space Grotesk,sans-serif",cursor:"pointer" }}>Sign up →</button>
+          </>
+        )}
       </div>
     </nav>
   );
@@ -259,6 +271,7 @@ function NavBar({ page, setPage }) {
 /* ─── Hero ───────────────────────────────────────────────────── */
 function HeroSection() {
   const navigate = useNavigate();
+  const token = useAuthStore(s => s.token);
   return (
     <section style={{ minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"110px 24px 60px",textAlign:"center",position:"relative" }}>
       <div style={{ display:"inline-flex",alignItems:"center",gap:8,background:"rgba(29,158,117,0.1)",border:"0.5px solid rgba(29,158,117,0.3)",borderRadius:100,padding:"5px 14px",marginBottom:26,animation:"fadeUp 0.6s ease both" }}>
@@ -274,8 +287,14 @@ function HeroSection() {
         Upload a PostgreSQL schema. SchemaMorph builds a dependency graph, runs Louvain clustering, and delivers named microservice boundaries with validation and per-service DDL.
       </p>
       <div style={{ display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",animation:"fadeUp 0.6s 0.35s ease both" }}>
-        <button onClick={()=>navigate("/register")} style={{ background:"#1D9E75",color:"#fff",padding:"13px 28px",borderRadius:10,fontSize:15,fontWeight:600,fontFamily:"Space Grotesk,sans-serif",border:"none",cursor:"pointer",display:"inline-block" }}>Get started →</button>
-        <button onClick={()=>navigate("/login")} style={{ background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.82)",border:"0.5px solid rgba(255,255,255,0.15)",padding:"13px 24px",borderRadius:10,fontSize:15,fontWeight:500,fontFamily:"Space Grotesk,sans-serif",cursor:"pointer",display:"inline-block" }}>Log in</button>
+        {token ? (
+          <button onClick={()=>navigate("/upload")} style={{ background:"#1D9E75",color:"#fff",padding:"13px 28px",borderRadius:10,fontSize:15,fontWeight:600,fontFamily:"Space Grotesk,sans-serif",border:"none",cursor:"pointer",display:"inline-block" }}>Go to Dashboard →</button>
+        ) : (
+          <>
+            <button onClick={()=>navigate("/register")} style={{ background:"#1D9E75",color:"#fff",padding:"13px 28px",borderRadius:10,fontSize:15,fontWeight:600,fontFamily:"Space Grotesk,sans-serif",border:"none",cursor:"pointer",display:"inline-block" }}>Get started →</button>
+            <button onClick={()=>navigate("/login")} style={{ background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.82)",border:"0.5px solid rgba(255,255,255,0.15)",padding:"13px 24px",borderRadius:10,fontSize:15,fontWeight:500,fontFamily:"Space Grotesk,sans-serif",cursor:"pointer",display:"inline-block" }}>Log in</button>
+          </>
+        )}
       </div>
       <div style={{ display:"flex",gap:52,justifyContent:"center",marginTop:60,flexWrap:"wrap",animation:"fadeUp 0.6s 0.5s ease both" }}>
         {[{v:7,s:" steps",l:"pipeline stages"},{v:8,s:" tables",l:"internal schema"},{v:100,s:"%",l:"deterministic"}].map((st,i)=>(
@@ -413,6 +432,8 @@ function TeamPage() {
 /* ─── Main Landing Page ──────────────────────────────────────── */
 export default function Landing() {
   const navigate = useNavigate();
+  const token = useAuthStore(s => s.token);
+  const logout = useAuthStore(s => s.logout);
   const [page, setPage] = useState("home");
   return (
     <>
@@ -436,8 +457,14 @@ export default function Landing() {
                 <h2 style={{fontFamily:"Space Grotesk,sans-serif",fontSize:"clamp(1.7rem,4vw,2.4rem)",fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:14}}>Ready to decompose your schema?</h2>
                 <p style={{color:"rgba(255,255,255,0.38)",fontFamily:"Inter,sans-serif",fontSize:14,lineHeight:1.7,marginBottom:30}}>Upload your PostgreSQL DDL and get a full microservice decomposition report in seconds.</p>
                 <div style={{display:"flex",gap:12,justifyContent:"center"}}>
-                  <button onClick={()=>navigate("/register")} style={{background:"#1D9E75",color:"#fff",padding:"12px 26px",borderRadius:10,fontSize:14,fontWeight:600,fontFamily:"Space Grotesk,sans-serif",border:"none",cursor:"pointer",display:"inline-block"}}>Get started →</button>
-                  <button onClick={()=>navigate("/login")} style={{background:"rgba(255,255,255,0.05)",color:"rgba(255,255,255,0.75)",border:"0.5px solid rgba(255,255,255,0.12)",padding:"12px 22px",borderRadius:10,fontSize:14,fontWeight:500,fontFamily:"Space Grotesk,sans-serif",cursor:"pointer",display:"inline-block"}}>Log in</button>
+                  {token ? (
+                    <button onClick={()=>navigate("/upload")} style={{background:"#1D9E75",color:"#fff",padding:"12px 26px",borderRadius:10,fontSize:14,fontWeight:600,fontFamily:"Space Grotesk,sans-serif",border:"none",cursor:"pointer",display:"inline-block"}}>Go to Dashboard →</button>
+                  ) : (
+                    <>
+                      <button onClick={()=>navigate("/register")} style={{background:"#1D9E75",color:"#fff",padding:"12px 26px",borderRadius:10,fontSize:14,fontWeight:600,fontFamily:"Space Grotesk,sans-serif",border:"none",cursor:"pointer",display:"inline-block"}}>Get started →</button>
+                      <button onClick={()=>navigate("/login")} style={{background:"rgba(255,255,255,0.05)",color:"rgba(255,255,255,0.75)",border:"0.5px solid rgba(255,255,255,0.12)",padding:"12px 22px",borderRadius:10,fontSize:14,fontWeight:500,fontFamily:"Space Grotesk,sans-serif",cursor:"pointer",display:"inline-block"}}>Log in</button>
+                    </>
+                  )}
                 </div>
               </div>
             </section>
@@ -447,8 +474,17 @@ export default function Landing() {
           <div style={{ maxWidth:1000,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12 }}>
             <p style={{fontFamily:"Inter,sans-serif",fontSize:12,color:"rgba(255,255,255,0.22)"}}>© 2025 SchemaMorph AI · Raghuraj · Samridhi Singh · Samridhi Jaiswal</p>
             <div style={{display:"flex",gap:16}}>
-              <button onClick={()=>navigate("/login")} style={{fontFamily:"Space Grotesk,sans-serif",fontSize:12,color:"rgba(255,255,255,0.28)",textDecoration:"none",background:"none",border:"none",cursor:"pointer"}}>Log in</button>
-              <button onClick={()=>navigate("/register")} style={{fontFamily:"Space Grotesk,sans-serif",fontSize:12,color:"rgba(255,255,255,0.28)",textDecoration:"none",background:"none",border:"none",cursor:"pointer"}}>Sign up</button>
+              {token ? (
+                <>
+                  <button onClick={()=>navigate("/upload")} style={{fontFamily:"Space Grotesk,sans-serif",fontSize:12,color:"rgba(255,255,255,0.28)",textDecoration:"none",background:"none",border:"none",cursor:"pointer"}}>Dashboard</button>
+                  <button onClick={()=>{logout(); navigate("/");}} style={{fontFamily:"Space Grotesk,sans-serif",fontSize:12,color:"rgba(255,255,255,0.28)",textDecoration:"none",background:"none",border:"none",cursor:"pointer"}}>Log out</button>
+                </>
+              ) : (
+                <>
+                  <button onClick={()=>navigate("/login")} style={{fontFamily:"Space Grotesk,sans-serif",fontSize:12,color:"rgba(255,255,255,0.28)",textDecoration:"none",background:"none",border:"none",cursor:"pointer"}}>Log in</button>
+                  <button onClick={()=>navigate("/register")} style={{fontFamily:"Space Grotesk,sans-serif",fontSize:12,color:"rgba(255,255,255,0.28)",textDecoration:"none",background:"none",border:"none",cursor:"pointer"}}>Sign up</button>
+                </>
+              )}
             </div>
           </div>
         </footer>
