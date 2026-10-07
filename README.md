@@ -1,4 +1,4 @@
-# SchemaMorph AI
+# 🧬 SchemaMorph AI
 
 > **Intelligent Monolith-to-Microservices Database Decomposition Platform**  
 > Analyze monolithic PostgreSQL schemas and discover natural, production-ready microservice boundaries using deterministic graph algorithms and Google Gemini AI.
@@ -7,12 +7,27 @@
 
 ## 🌟 Overview
 
-**SchemaMorph AI** addresses one of the hardest problems in software engineering: safely decomposing legacy monolithic databases into clean, independently deployable microservice schemas. 
+**SchemaMorph AI** tackles a really tough problem: how do you safely break down a massive legacy monolithic database into clean, independently deployable microservices?
 
-Instead of relying solely on black-box LLM hallucinations or rigid manual heuristics, SchemaMorph AI uses a **hybrid, deterministic-first architecture**:
-1. **Mathematical Partitioning**: Uses `sqlglot` + `NetworkX` + **Louvain Community Detection** to group database tables based on foreign key relationships and query co-access weights.
-2. **AI Narration & Strategic Insights**: Google Gemini AI inspects the deterministic clusters to provide semantic domain naming, design rationale, API boundary recommendations, and broken query mitigations.
-3. **Comprehensive Validation Engine**: Automatically verifies partition consistency, cycles, orphaned tables, and foreign-key integrity constraints.
+Instead of relying purely on black-box LLM magic or spending weeks doing it manually, SchemaMorph AI uses a **hybrid, deterministic-first approach**:
+1. **Mathematical Partitioning**: We use `sqlglot`, `NetworkX`, and **Louvain Community Detection** to group your database tables based on actual foreign key relationships and query co-access patterns.
+2. **AI Narration**: Google Gemini AI comes in to inspect these deterministic clusters, giving them semantic domain names, explaining the design rationale, and suggesting API boundaries.
+3. **Comprehensive Validation**: We automatically double-check the partitions to ensure there are no circular dependencies, orphaned tables, or broken foreign-key constraints.
+
+---
+
+## ✨ What Makes SchemaMorph Unique?
+
+If you've tried using AI to refactor databases before, you've probably noticed that LLMs tend to hallucinate or give you different answers every time you ask. We built SchemaMorph to fix exactly that. 
+
+Instead of just throwing your schema at an LLM and hoping for the best, we rely on **math first and AI second**.
+
+Here's how we approach it differently:
+
+- 🧠 **Math First, AI Second:** We use graph theory (specifically the Louvain Community Detection algorithm) to figure out where the microservice boundaries should be. We only use Gemini AI at the very end to give those clusters human-readable domain names and explain the reasoning.
+- 🎯 **100% Reproducible:** Because the heavy lifting is done by deterministic math, you can run the exact same schema through our platform 100 times and you'll get the exact same boundaries 100 times. No random AI chaos.
+- 📊 **Workload-Aware:** We don't just look at how your tables are defined. We actually parse your application's `SELECT` and `JOIN` queries. If two tables are constantly queried together, we make sure they stay in the same microservice to avoid crippling network latency.
+- 🛡️ **Zero-Hallucination Constraints:** Before any code is generated, our independent validation engine mathematically checks the results to make sure there are no circular dependencies, orphaned tables, or broken foreign keys.
 
 ---
 
@@ -23,7 +38,7 @@ Instead of relying solely on black-box LLM hallucinations or rigid manual heuris
 - 🛡️ **Zero-Hallucination Integrity Checks**: An independent rule-based validator inspects partition completeness, orphan tables, FK crossings, and cyclic dependencies before generating final outputs.
 - 📜 **Per-Service DDL Generation**: Exports clean, isolated, ready-to-deploy SQL schemas for each proposed microservice with foreign keys cleanly decoupled.
 - 🕸️ **Interactive React Flow Visualization**: Color-coded, draggable graph visualization with Dagre auto-layout, interactive node exploration, and real-time community highlighting.
-- 🎨 **Modern Dark-Mode UI**: Built with React 18, Vite, Tailwind CSS, `@xyflow/react`, and `@skiper-ui` animated components.
+- 🎨 **Modern Dark-Mode UI**: Built with React 18, Vite, Tailwind CSS, `@xyflow/react`, and `Three.js` 3D background elements.
 - 🔐 **Secure Authentication**: JWT token authentication with bcrypt password hashing and user session management.
 
 ---
@@ -66,8 +81,9 @@ flowchart TD
 - **Framework**: React 18 + Vite
 - **Styling**: Tailwind CSS
 - **Graph Visualization**: `@xyflow/react` (React Flow) + `@dagrejs/dagre` layout
+- **3D Graphics & FX**: `Three.js`, `@react-three/fiber`, `@react-three/drei`
 - **State Management**: Zustand
-- **UI Components & FX**: `@skiper-ui/skiper40`, Lucide Icons, `react-hot-toast`, `react-syntax-highlighter`, `recharts`
+- **UI Components**: `react-hot-toast`, `react-syntax-highlighter`, `recharts`, `lucide-react` (via shadcn)
 - **Routing & HTTP**: `react-router-dom` v7, `axios`
 
 ---
@@ -114,11 +130,14 @@ SchemaMorph-AI/
 │   │   │   └── ui/
 │   │   │       └── skiper-ui/ # Animated UI components (@skiper-ui/skiper40)
 │   │   ├── lib/              # Utility helpers (cn / clsx / tailwind-merge)
-│   │   ├── pages/            # Landing, Login, Register, Upload, Dashboard
+│   │   ├── pages/            # Landing, Login, Register, Upload, Dashboard, History, Team, ProfileSettings
 │   │   │   ├── Dashboard.jsx
+│   │   │   ├── History.jsx
 │   │   │   ├── Landing.jsx
 │   │   │   ├── Login.jsx
+│   │   │   ├── ProfileSettings.jsx
 │   │   │   ├── Register.jsx
+│   │   │   ├── Team.jsx
 │   │   │   └── Upload.jsx
 │   │   ├── store/            # Zustand auth and analysis state stores
 │   │   ├── App.jsx           # Application routes and protected routing
@@ -203,7 +222,8 @@ npm run dev
 | `POST` | `/api/v1/upload-queries` | Attach sample query logs to session |
 | `POST` | `/api/v1/analyze` | Execute complete 7-step decomposition pipeline |
 | `GET`  | `/api/v1/session/{id}` | Retrieve cached session results & partition data |
-| `GET`  | `/api/v1/export/{id}/markdown` | Download formatted Markdown decomposition report |
+| `GET`  | `/api/v1/projects` | List all saved analysis projects |
+| `DELETE` | `/api/v1/projects/{id}` | Delete a saved analysis project |
 
 ---
 
