@@ -225,7 +225,7 @@ export default function Upload() {
                 placeholder={SAMPLE_SCHEMA}
                 rows={12}
                 className="w-full bg-surface-800 border border-surface-600 rounded-lg px-4 py-3
-                           font-mono text-xs text-surface-300 placeholder-surface-600
+                           font-mono text-xs text-surface-300 placeholder-surface-400
                            focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30
                            resize-y transition-all"
               />
@@ -277,7 +277,7 @@ export default function Upload() {
               placeholder={SAMPLE_QUERIES}
               rows={8}
               className="w-full bg-surface-800 border border-surface-600 rounded-lg px-4 py-3
-                         font-mono text-xs text-surface-300 placeholder-surface-600
+                         font-mono text-xs text-surface-300 placeholder-surface-400
                          focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30
                          resize-y transition-all"
             />
