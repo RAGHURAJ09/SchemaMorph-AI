@@ -54,19 +54,17 @@ export function MemberCard({ member }) {
         initial={{ y: 60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.6 }}
-        style={{ width: '100%', minHeight: '100%', cursor: 'default', padding: '30px 20px' }}
+        style={{ '--secondary': rc.text, width: '100%', minHeight: '100%', cursor: 'default', padding: '30px 20px' }}
       >
         {/* Avatar */}
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-          <img src={imgSrc} className="team-img" alt={member.name} style={{ width: 110, height: 110, marginBottom: 20, borderRadius: '50%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
+          <img src={imgSrc} className="team-img" alt={member.name} onError={(e) => { e.target.style.display = 'none'; }} />
         </div>
 
         <h3 style={{ fontSize: 20, marginBottom: 5, textAlign: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>{member.name}</h3>
-        <p className="role" style={{ color: rc.text, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', marginBottom: 12, textAlign: 'center', textTransform: 'uppercase' }}>
+        <p className="role" style={{ color: rc.text, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', marginBottom: 16, textAlign: 'center', textTransform: 'uppercase' }}>
           {member.role}
         </p>
-        
-        <div style={{ width: 24, height: 2, backgroundColor: rc.text, margin: '0 auto 16px auto', borderRadius: 2 }} />
 
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', textAlign: 'center', marginBottom: 10 }}>
           {member.email}

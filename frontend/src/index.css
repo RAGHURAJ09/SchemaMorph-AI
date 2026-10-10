@@ -97,7 +97,7 @@ pre, code {
   align-items: center;
   text-align: center;
   width: 300px !important;
-  min-height: 320px;
+  min-height: 400px;
   background: rgba(10, 10, 20, 0.4) !important;
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
