@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import Tilt from "react-parallax-tilt";
 import { motion } from "framer-motion";
-
+import { TEAM_MEMBERS, MemberCard } from "./Team";
 /* ─── Data ─────────────────────────────────────────────────── */
 import Background3D from "../components/Background3D";
 const TEAM = [
@@ -606,51 +606,16 @@ function FeaturesSection() {
 function TeamPage() {
   return (
     <section style={{ minHeight:"100vh",background:"radial-gradient(ellipse 65% 45% at 50% 0%,rgba(83,74,183,0.13) 0%,transparent 60%),rgba(9,12,18,0.97)",padding:"110px 24px 80px" }}>
-      <div style={{ maxWidth:940,margin:"0 auto" }}>
+      <div style={{ maxWidth: 1100, margin:"0 auto" }}>
         <div style={{ textAlign:"center",marginBottom:64 }}>
           <p style={{color:"#534AB7",fontFamily:"Space Grotesk,sans-serif",fontWeight:600,fontSize:12,letterSpacing:"0.1em",marginBottom:12}}>THE PEOPLE</p>
           <h1 style={{fontFamily:"Space Grotesk,sans-serif",fontSize:"clamp(2rem,5vw,3rem)",fontWeight:700,color:"#fff",letterSpacing:"-0.8px",marginBottom:12}}>Built by three.</h1>
           <p style={{fontFamily:"Inter,sans-serif",fontSize:15,color:"rgba(255,255,255,0.38)",maxWidth:440,margin:"0 auto",lineHeight:1.7}}>SchemaMorph AI is a capstone project — a real tool built by engineers who needed it to exist.</p>
         </div>
         <div className="team-container">
-          <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={2500} className="tilt-wrapper">
-            <motion.div
-              className="team-card"
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-            >
-              <img src="/raghu.jpeg" className="team-img" alt="Raghuraj" />
-              <h3>Raghuraj Rajpoot</h3>
-              <p className="role">Full Stack Developer</p>
-            </motion.div>
-          </Tilt>
-
-          <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={2500} className="tilt-wrapper">
-            <motion.div
-              className="team-card"
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-            >
-              <img src="/samridhi.jpeg" className="team-img" alt="Samridhi" />
-              <h3>Samridhi Jaiswal</h3>
-              <p className="role">Machine Learning Engineer</p>
-            </motion.div>
-          </Tilt>
-
-          <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={2500} className="tilt-wrapper">
-            <motion.div
-              className="team-card"
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.6 }}
-            >
-              <img src="/samridhi_singh.jpeg" className="team-img" alt="Samridhi Singh" onError={(e) => { e.target.style.display = 'none'; }} />
-              <h3>Samridhi Singh</h3>
-              <p className="role">Frontend Engineer</p>
-            </motion.div>
-          </Tilt>
+          {TEAM_MEMBERS.map(m => (
+            <MemberCard key={m.id} member={m} />
+          ))}
         </div>
         <FadeIn i={3} style={{ marginTop:52 }}>
           <div style={{ textAlign:"center",background:"rgba(255,255,255,0.02)",border:"0.5px solid rgba(255,255,255,0.07)",borderRadius:12,padding:24 }}>
