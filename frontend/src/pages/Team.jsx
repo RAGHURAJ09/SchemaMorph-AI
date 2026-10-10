@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import Tilt from "react-parallax-tilt"
+import { motion } from "framer-motion"
 
 /* ── Team data ────────────────────────────────────────────────────────────── */
 const TEAM_MEMBERS = [
@@ -11,26 +13,19 @@ const TEAM_MEMBERS = [
     skills: ['Schema Design', 'Microservices', 'PostgreSQL'],
   },
   {
-    id: 2, name: 'Priya Sharma', email: 'priya@schemamorph.ai',
-    role: 'Analyst', initials: 'PS',
+    id: 2, name: 'Samridhi Jaiswal', email: 'samridhi.j@schemamorph.ai',
+    role: 'Analyst', initials: 'SJ',
     joined: '2024-03-15', analyses: 28,
     color: '#6366f1', status: 'online',
-    skills: ['Data Modeling', 'MySQL', 'Analytics'],
+    skills: ['Data Modeling', 'Machine Learning', 'Analytics'],
   },
   {
-    id: 3, name: 'Arjun Verma', email: 'arjun@schemamorph.ai',
-    role: 'Analyst', initials: 'AV',
+    id: 3, name: 'Samridhi Singh', email: 'samridhi.s@schemamorph.ai',
+    role: 'Analyst', initials: 'SS',
     joined: '2024-05-20', analyses: 15,
     color: '#f59e0b', status: 'away',
-    skills: ['SQL Server', 'ETL', 'BigQuery'],
-  },
-  {
-    id: 4, name: 'Sneha Patel', email: 'sneha@schemamorph.ai',
-    role: 'Viewer', initials: 'SP',
-    joined: '2024-07-01', analyses: 7,
-    color: '#ec4899', status: 'offline',
-    skills: ['MongoDB', 'API Design'],
-  },
+    skills: ['Frontend', 'React', 'UI/UX'],
+  }
 ]
 
 const ROLE_COLORS = {
@@ -52,60 +47,39 @@ const ACTIVITY = [
 /* ── Member Card ─────────────────────────────────────────────────────────── */
 function MemberCard({ member, onRemove }) {
   const rc = ROLE_COLORS[member.role] || ROLE_COLORS.Viewer
+  
+  const imgMap = {
+    'Raghuraj': '/raghu.jpeg',
+    'Samridhi Jaiswal': '/samridhi.jpeg',
+    'Samridhi Singh': '/samridhi_singh.jpeg'
+  }
+  const imgSrc = imgMap[member.name] || '/raghu.jpeg'
 
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.025)',
-      border: '1px solid rgba(255,255,255,0.07)',
-      borderRadius: 16, padding: 24,
-      transition: 'border-color 0.2s, transform 0.2s',
-      cursor: 'default',
-    }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = `${member.color}33`; e.currentTarget.style.transform = 'translateY(-2px)' }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.transform = 'translateY(0)' }}
-    >
-      {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 16 }}>
+    <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={2500} className="tilt-wrapper" style={{ height: '100%' }}>
+      <motion.div
+        className="team-card"
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+        style={{ width: '100%', minHeight: '100%', cursor: 'default', padding: '30px 20px' }}
+      >
         {/* Avatar with status dot */}
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          <div style={{
-            width: 52, height: 52, borderRadius: '50%',
-            background: `linear-gradient(135deg, ${member.color}, ${member.color}88)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, fontWeight: 700, color: '#fff',
-            fontFamily: 'Space Grotesk, sans-serif',
-            boxShadow: `0 0 18px ${member.color}30`,
-          }}>{member.initials}</div>
+        <div style={{ position: 'relative' }}>
+          <img src={imgSrc} className="team-img" alt={member.name} style={{ width: 110, height: 110, marginBottom: 20 }} onError={(e) => { e.target.style.display = 'none'; }} />
           <span style={{
-            position: 'absolute', bottom: 1, right: 1,
-            width: 12, height: 12, borderRadius: '50%',
+            position: 'absolute', bottom: 30, right: 5,
+            width: 14, height: 14, borderRadius: '50%',
             background: STATUS_COLORS[member.status],
             border: '2px solid #090C12',
           }} />
         </div>
 
-        {/* Name & email */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: 15, fontWeight: 700, color: '#fff',
-            fontFamily: 'Space Grotesk, sans-serif', marginBottom: 3,
-          }}>{member.name}</div>
-          <div style={{
-            fontSize: 11, color: 'rgba(255,255,255,0.35)',
-            fontFamily: 'Inter, sans-serif',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>{member.email}</div>
+        <h3 style={{ fontSize: 20, marginBottom: 5 }}>{member.name}</h3>
+        <p className="role" style={{ color: rc.text, fontSize: 12, marginBottom: 5 }}>{member.role}</p>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter, sans-serif', marginBottom: 20 }}>
+          {member.email}
         </div>
-
-        {/* Role badge */}
-        <span style={{
-          fontSize: 10, fontWeight: 600, padding: '3px 10px',
-          borderRadius: 20, border: `1px solid ${rc.border}`,
-          background: rc.bg, color: rc.text,
-          fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0.04em',
-          flexShrink: 0,
-        }}>{member.role}</span>
-      </div>
 
       {/* Stats row */}
       <div style={{
@@ -147,36 +121,37 @@ function MemberCard({ member, onRemove }) {
         ))}
       </div>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button
-          onClick={() => toast.success(`Message sent to ${member.name}!`)}
-          style={{
-            flex: 1, padding: '7px',
-            background: `${member.color}12`,
-            border: `1px solid ${member.color}25`,
-            borderRadius: 8, color: member.color,
-            fontSize: 11, fontWeight: 500,
-            fontFamily: 'Space Grotesk, sans-serif',
-            cursor: 'pointer',
-          }}
-        >Message</button>
-        {member.role !== 'Admin' && (
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 8, width: '100%', marginTop: 'auto' }}>
           <button
-            onClick={() => onRemove(member.id)}
+            onClick={() => toast.success(`Message sent to ${member.name}!`)}
             style={{
-              padding: '7px 12px',
-              background: 'rgba(248,113,113,0.08)',
-              border: '1px solid rgba(248,113,113,0.2)',
-              borderRadius: 8, color: '#f87171',
+              flex: 1, padding: '7px',
+              background: `${member.color}12`,
+              border: `1px solid ${member.color}25`,
+              borderRadius: 8, color: member.color,
               fontSize: 11, fontWeight: 500,
               fontFamily: 'Space Grotesk, sans-serif',
               cursor: 'pointer',
             }}
-          >Remove</button>
-        )}
-      </div>
-    </div>
+          >Message</button>
+          {member.role !== 'Admin' && (
+            <button
+              onClick={() => onRemove(member.id)}
+              style={{
+                flex: 1, padding: '7px',
+                background: 'rgba(248,113,113,0.08)',
+                border: '1px solid rgba(248,113,113,0.2)',
+                borderRadius: 8, color: '#f87171',
+                fontSize: 11, fontWeight: 500,
+                fontFamily: 'Space Grotesk, sans-serif',
+                cursor: 'pointer',
+              }}
+            >Remove</button>
+          )}
+        </div>
+      </motion.div>
+    </Tilt>
   )
 }
 

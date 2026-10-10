@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
+import Tilt from "react-parallax-tilt";
+import { motion } from "framer-motion";
 
 /* ─── Data ─────────────────────────────────────────────────── */
 import Background3D from "../components/Background3D";
@@ -610,21 +612,45 @@ function TeamPage() {
           <h1 style={{fontFamily:"Space Grotesk,sans-serif",fontSize:"clamp(2rem,5vw,3rem)",fontWeight:700,color:"#fff",letterSpacing:"-0.8px",marginBottom:12}}>Built by three.</h1>
           <p style={{fontFamily:"Inter,sans-serif",fontSize:15,color:"rgba(255,255,255,0.38)",maxWidth:440,margin:"0 auto",lineHeight:1.7}}>SchemaMorph AI is a capstone project — a real tool built by engineers who needed it to exist.</p>
         </div>
-        <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(270px,1fr))",gap:22 }}>
-          {TEAM.map((m,i)=>(
-            <FadeIn key={m.name} i={i}>
-              <TiltCard style={{ background:"rgba(255,255,255,0.03)",border:"0.5px solid rgba(255,255,255,0.1)",borderRadius:18,padding:"36px 28px",textAlign:"center" }}>
-                <div style={{ width:68,height:68,borderRadius:"50%",background:m.bg,border:`2px solid ${m.color}38`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px",fontSize:20,fontWeight:700,color:m.color,fontFamily:"Space Grotesk,sans-serif",position:"relative" }}>
-                  {m.avatar}
-                  <div style={{ position:"absolute",inset:-4,borderRadius:"50%",border:`1px solid ${m.color}28`,animation:`pulse 2.5s ${i*.6}s ease-in-out infinite` }}/>
-                </div>
-                <div style={{ display:"inline-block",background:`${m.color}18`,border:`0.5px solid ${m.color}38`,borderRadius:100,padding:"4px 12px",marginBottom:14,fontSize:11,fontWeight:600,color:m.color,fontFamily:"Space Grotesk,sans-serif" }}>{m.role}</div>
-                <h3 style={{fontFamily:"Space Grotesk,sans-serif",fontSize:16,fontWeight:700,color:"#fff",margin:"0 0 10px",lineHeight:1.25}}>{m.name}</h3>
-                <p style={{fontFamily:"Inter,sans-serif",fontSize:13,color:"rgba(255,255,255,0.38)",lineHeight:1.6,margin:0}}>{m.desc}</p>
-                <div style={{width:36,height:2,borderRadius:2,background:m.color,margin:"20px auto 0",opacity:.35}}/>
-              </TiltCard>
-            </FadeIn>
-          ))}
+        <div className="team-container">
+          <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={2500} className="tilt-wrapper">
+            <motion.div
+              className="team-card"
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+            >
+              <img src="/raghu.jpeg" className="team-img" alt="Raghuraj" />
+              <h3>Raghuraj Rajpoot</h3>
+              <p className="role">Full Stack Developer</p>
+            </motion.div>
+          </Tilt>
+
+          <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={2500} className="tilt-wrapper">
+            <motion.div
+              className="team-card"
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
+              <img src="/samridhi.jpeg" className="team-img" alt="Samridhi" />
+              <h3>Samridhi Jaiswal</h3>
+              <p className="role">Machine Learning Engineer</p>
+            </motion.div>
+          </Tilt>
+
+          <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={2500} className="tilt-wrapper">
+            <motion.div
+              className="team-card"
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
+            >
+              <img src="/samridhi_singh.jpeg" className="team-img" alt="Samridhi Singh" onError={(e) => { e.target.style.display = 'none'; }} />
+              <h3>Samridhi Singh</h3>
+              <p className="role">Frontend Engineer</p>
+            </motion.div>
+          </Tilt>
         </div>
         <FadeIn i={3} style={{ marginTop:52 }}>
           <div style={{ textAlign:"center",background:"rgba(255,255,255,0.02)",border:"0.5px solid rgba(255,255,255,0.07)",borderRadius:12,padding:24 }}>
