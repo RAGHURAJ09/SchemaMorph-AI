@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import Tilt from "react-parallax-tilt";
 import { motion } from "framer-motion";
-import { TEAM_MEMBERS, MemberCard } from "./Team";
+import { TEAM_MEMBERS } from "./Team";
 /* ─── Data ─────────────────────────────────────────────────── */
 import Background3D from "../components/Background3D";
 const TEAM = [
@@ -603,6 +603,45 @@ function FeaturesSection() {
 }
 
 /* ─── Team Page ──────────────────────────────────────────────── */
+
+function SimpleMemberCard({ member }) {
+  const ROLE_COLORS = {
+    Admin: { text: '#1D9E75' },
+    Analyst: { text: '#818cf8' },
+    Viewer: { text: 'rgba(255,255,255,0.5)' },
+  }
+  const rc = ROLE_COLORS[member.role] || ROLE_COLORS.Viewer
+  const imgMap = {
+    'Raghuraj': '/raghu.jpeg',
+    'Samridhi Jaiswal': '/samridhi.jpeg',
+    'Samridhi Singh': '/samridhi_singh.jpeg'
+  }
+  const imgSrc = imgMap[member.name] || '/raghu.jpeg'
+
+  return (
+    <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} scale={1.05} transitionSpeed={2500} className="tilt-wrapper" style={{ height: '100%' }}>
+      <motion.div
+        className="team-card"
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+        style={{ '--secondary': rc.text, width: '100%', minHeight: '100%', cursor: 'default', padding: '30px 20px' }}
+      >
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+          <img src={imgSrc} className="team-img" alt={member.name} onError={(e) => { e.target.style.display = 'none'; }} />
+        </div>
+        <h3 style={{ fontSize: 20, marginBottom: 5, textAlign: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>{member.name}</h3>
+        <p className="role" style={{ color: rc.text, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', marginBottom: 16, textAlign: 'center', textTransform: 'uppercase' }}>
+          {member.role}
+        </p>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', textAlign: 'center', marginBottom: 10 }}>
+          {member.email}
+        </div>
+      </motion.div>
+    </Tilt>
+  )
+}
+
 function TeamPage() {
   return (
     <section style={{ minHeight:"100vh",background:"radial-gradient(ellipse 65% 45% at 50% 0%,rgba(83,74,183,0.13) 0%,transparent 60%),rgba(9,12,18,0.97)",padding:"110px 24px 80px" }}>
@@ -614,7 +653,7 @@ function TeamPage() {
         </div>
         <div className="team-container">
           {TEAM_MEMBERS.map(m => (
-            <MemberCard key={m.id} member={m} />
+            <SimpleMemberCard key={m.id} member={m} />
           ))}
         </div>
         <FadeIn i={3} style={{ marginTop:52 }}>

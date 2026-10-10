@@ -62,12 +62,68 @@ export function MemberCard({ member }) {
         </div>
 
         <h3 style={{ fontSize: 20, marginBottom: 5, textAlign: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>{member.name}</h3>
-        <p className="role" style={{ color: rc.text, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', marginBottom: 16, textAlign: 'center', textTransform: 'uppercase' }}>
+        <p className="role" style={{ color: rc.text, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', marginBottom: 12, textAlign: 'center', textTransform: 'uppercase' }}>
           {member.role}
         </p>
 
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', textAlign: 'center', marginBottom: 10 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', textAlign: 'center', marginBottom: 20 }}>
           {member.email}
+        </div>
+
+        {/* Stats row */}
+        <div style={{
+          display: 'flex', gap: 0, marginBottom: 16,
+          background: 'rgba(255,255,255,0.03)',
+          borderRadius: 10, overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          {[
+            { label: 'Analyses', val: member.analyses },
+            { label: 'Status', val: member.status.charAt(0).toUpperCase() + member.status.slice(1) },
+            { label: 'Joined', val: new Date(member.joined).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) },
+          ].map((stat, i) => (
+            <div key={stat.label} style={{
+              flex: 1, padding: '10px 14px', textAlign: 'center',
+              borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'Space Grotesk, sans-serif' }}>
+                {stat.val}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2, fontFamily: 'Inter, sans-serif' }}>
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Skills */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+          {member.skills.map(skill => (
+            <span key={skill} style={{
+              fontSize: 10, padding: '3px 9px',
+              borderRadius: 6,
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              color: 'rgba(255,255,255,0.5)',
+              fontFamily: 'Inter, sans-serif',
+            }}>{skill}</span>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 8, width: '100%', marginTop: 'auto' }}>
+          <button
+            onClick={() => toast.success(`Message sent to ${member.name}!`)}
+            style={{
+              flex: 1, padding: '7px',
+              background: `${member.color}12`,
+              border: `1px solid ${member.color}25`,
+              borderRadius: 8, color: member.color,
+              fontSize: 11, fontWeight: 500,
+              fontFamily: 'Space Grotesk, sans-serif',
+              cursor: 'pointer',
+            }}
+          >Message</button>
         </div>
       </motion.div>
     </Tilt>
@@ -77,7 +133,7 @@ export function MemberCard({ member }) {
 /* ── Main ────────────────────────────────────────────────────────────────── */
 export default function Team() {
   return (
-    <div style={{ padding: '28px 32px', maxWidth: 1200 }}>
+    <div style={{ padding: '28px 32px', maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 32, alignItems: 'stretch' }}>
         {/* Top: member grid */}
         <div>
