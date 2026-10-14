@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 
 const PAGE_TITLES = {
@@ -10,6 +10,7 @@ const PAGE_TITLES = {
 
 export default function TopBar({ sidebarCollapsed }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
 
   const isDashboard = location.pathname.startsWith('/dashboard')
@@ -86,15 +87,22 @@ export default function TopBar({ sidebarCollapsed }) {
         </button>
 
         {/* User avatar */}
-        <div style={{
-          width: 34, height: 34, borderRadius: '50%',
-          background: 'linear-gradient(135deg, #1D9E75, #0d6e52)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 13, fontWeight: 700, color: '#fff',
-          fontFamily: 'Space Grotesk, sans-serif',
-          cursor: 'pointer',
-          boxShadow: '0 0 12px rgba(29,158,117,0.25)',
-        }}>
+        <div
+          onClick={() => navigate('/profile')}
+          title="Account Profile & Settings"
+          style={{
+            width: 34, height: 34, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #1D9E75, #0d6e52)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 13, fontWeight: 700, color: '#fff',
+            fontFamily: 'Space Grotesk, sans-serif',
+            cursor: 'pointer',
+            boxShadow: '0 0 12px rgba(29,158,117,0.25)',
+            transition: 'transform 0.2s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+        >
           {initial}
         </div>
       </div>

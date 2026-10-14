@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 import toast from 'react-hot-toast'
 
@@ -98,6 +99,7 @@ function Toggle({ label, description, value, onChange }) {
 
 /* ── Main ────────────────────────────────────────────────────────────────── */
 export default function ProfileSettings() {
+  const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
 
@@ -257,7 +259,11 @@ export default function ProfileSettings() {
         </p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <button
-            onClick={() => { logout(); toast.success('Logged out from all devices'); }}
+            onClick={() => {
+              logout()
+              toast.success('Logged out successfully')
+              navigate('/login')
+            }}
             style={{
               padding: '9px 18px',
               background: 'rgba(251,191,36,0.1)',

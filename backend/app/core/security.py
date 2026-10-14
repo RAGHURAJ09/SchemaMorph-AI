@@ -62,7 +62,12 @@ def hash_password(password: str, enforce_rules: bool = False) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain-text password against a bcrypt hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    if not hashed_password or not plain_password:
+        return False
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception:
+        return False
 
 
 def create_access_token(user_id: str) -> str:

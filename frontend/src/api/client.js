@@ -2,7 +2,9 @@ import axios from 'axios'
 import useAuthStore from '../store/authStore'
 
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: import.meta.env.VITE_API_URL
+    ? `${import.meta.env.VITE_API_URL.replace(/\/+$/, '')}/api/v1`
+    : '/api/v1',
   timeout: 60000, // 60s — AI call can be slow
   headers: { 'Content-Type': 'application/json' },
 })
@@ -22,7 +24,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Only clear stored auth state if a protected request gets a 401, not the login endpoint itself
+    if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
       useAuthStore.getState().logout()
     }
     return Promise.reject(error)

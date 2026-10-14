@@ -3,6 +3,7 @@ Authentication endpoints: register and login.
 """
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -67,7 +68,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
 def login(req: LoginRequest, db: Session = Depends(get_db)):
     """Exchange credentials for a JWT access token."""
     email = normalize_email(req.email)
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(func.lower(User.email) == email).first()
     if not user or not verify_password(req.password, user.password_hash):
         raise HTTPException(
             status_code=401,
