@@ -33,7 +33,9 @@ export default function Register() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showRequirementsModal, setShowRequirementsModal] = useState(false)
   const passwordInputRef = useRef(null)
@@ -77,6 +79,7 @@ export default function Register() {
 
   const passedCount = conditions.filter((c) => c.met).length
   const allConditionsMet = passedCount === conditions.length
+  const passwordsMatch = password === confirmPassword
 
   const getStrength = () => {
     if (password.length === 0) return { label: 'Empty', color: 'rgba(255,255,255,0.25)', width: '0%' }
@@ -89,6 +92,11 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!passwordsMatch) {
+      toast.error('Passwords do not match!')
+      return
+    }
 
     // If conditions not satisfied, show popup and block signup
     if (!allConditionsMet) {
@@ -178,6 +186,32 @@ export default function Register() {
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
+          </div>
+
+          {/* Confirm Password */}
+          <div style={{ marginBottom:14 }}>
+            <label style={{ display:'block', fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.7)', marginBottom:6, fontFamily:'Space Grotesk,sans-serif' }}>Confirm Password</label>
+            <div style={{ position:'relative', width:'100%' }}>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                style={{ width:'100%', padding:'11px 40px 11px 14px', background:'rgba(255,255,255,0.04)', border: confirmPassword ? (passwordsMatch ? '0.5px solid rgba(16,185,129,0.5)' : '0.5px solid rgba(239,68,68,0.5)') : '0.5px solid rgba(255,255,255,0.12)', borderRadius:10, fontSize:14, color:'#fff', outline:'none', transition:'border-color 0.2s', fontFamily:'Inter,sans-serif', boxSizing:'border-box' }}
+                placeholder="Re-enter your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'transparent', border:'none', color:'rgba(255,255,255,0.4)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:4 }}
+              >
+                {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+            {confirmPassword.length > 0 && !passwordsMatch && (
+              <span style={{ display:'block', marginTop:5, fontSize:11, color:'#fca5a5' }}>Passwords do not match.</span>
+            )}
           </div>
 
           {/* Password Strength Meter */}
