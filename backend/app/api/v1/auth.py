@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
 from app.models.database import User
-from app.core.security import hash_password, verify_password, create_access_token
+from app.core.security import hash_password, verify_password, create_access_token, validate_password_complexity
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -44,10 +44,15 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
 
     if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=409, detail="Email already registered.")
-    if len(req.password) < 6:
-        raise HTTPException(status_code=422, detail="Password must be at least 6 characters.")
 
-    user = User(email=email, password_hash=hash_password(req.password))
+    is_valid, errors = validate_password_complexity(req.password)
+    if not is_valid:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Password does not meet required conditions: {', '.join(errors)}."
+        )
+
+    user = User(email=email, password_hash=hash_password(req.password, enforce_rules=True))
     db.add(user)
     try:
         db.commit()

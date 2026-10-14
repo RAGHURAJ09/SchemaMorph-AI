@@ -3,8 +3,9 @@ JWT Authentication & Security Utilities.
 Handles password hashing, token creation, and current user extraction.
 """
 import os
+import re
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, Tuple, List
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
@@ -27,8 +28,35 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 
-def hash_password(password: str) -> str:
-    """Hash a plain-text password using bcrypt."""
+def validate_password_complexity(password: str) -> Tuple[bool, List[str]]:
+    """
+    Validate that password meets complexity requirements:
+    - At least 8 characters
+    - At least one uppercase / capital letter (A-Z)
+    - At least one lowercase / small letter (a-z)
+    - At least one number (0-9)
+    - At least one special character
+    """
+    errors = []
+    if len(password) < 8:
+        errors.append("At least 8 characters")
+    if not re.search(r"[A-Z]", password):
+        errors.append("At least one uppercase / capital letter")
+    if not re.search(r"[a-z]", password):
+        errors.append("At least one lowercase / small letter")
+    if not re.search(r"[0-9]", password):
+        errors.append("At least one number")
+    if not re.search(r"[^A-Za-z0-9]", password):
+        errors.append("At least one special character")
+    return len(errors) == 0, errors
+
+
+def hash_password(password: str, enforce_rules: bool = False) -> str:
+    """Hash a plain-text password using bcrypt. If enforce_rules is True, validates strength."""
+    if enforce_rules:
+        is_valid, errors = validate_password_complexity(password)
+        if not is_valid:
+            raise ValueError(f"Password requirement not met: {', '.join(errors)}")
     return pwd_context.hash(password)
 
 
