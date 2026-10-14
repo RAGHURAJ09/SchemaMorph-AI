@@ -27,6 +27,9 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
+    first_name = Column(String(100), nullable=True)
+    middle_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), default=utc_now)

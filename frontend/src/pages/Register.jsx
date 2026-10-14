@@ -28,6 +28,9 @@ const ShieldAlertIcon = () => (
 )
 
 export default function Register() {
+  const [firstName, setFirstName] = useState('')
+  const [middleName, setMiddleName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -98,7 +101,7 @@ export default function Register() {
 
     setLoading(true)
     try {
-      await register(email, password)
+      await register(firstName, middleName, lastName, email, password)
       toast.success('Account created! Please log in.')
       navigate('/login')
     } catch (err) {
@@ -119,6 +122,27 @@ export default function Register() {
         </div>
         
         <form onSubmit={handleSubmit}>
+          {/* Name Fields */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:10, marginBottom:18 }}>
+            {[
+              { label: 'First Name', value: firstName, setValue: setFirstName, placeholder: 'First', required: true },
+              { label: 'Middle Name', value: middleName, setValue: setMiddleName, placeholder: 'Middle', required: false },
+              { label: 'Last Name', value: lastName, setValue: setLastName, placeholder: 'Last', required: true },
+            ].map((field) => (
+              <div key={field.label}>
+                <label style={{ display:'block', fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.7)', marginBottom:6, fontFamily:'Space Grotesk,sans-serif' }}>{field.label}</label>
+                <input
+                  type="text"
+                  required={field.required}
+                  value={field.value}
+                  onChange={(e) => field.setValue(e.target.value)}
+                  style={{ width:'100%', padding:'11px 10px', background:'rgba(255,255,255,0.04)', border:'0.5px solid rgba(255,255,255,0.12)', borderRadius:10, fontSize:14, color:'#fff', outline:'none', transition:'border-color 0.2s', fontFamily:'Inter,sans-serif', boxSizing:'border-box' }}
+                  placeholder={field.placeholder}
+                />
+              </div>
+            ))}
+          </div>
+
           {/* Email Address */}
           <div style={{ marginBottom:18 }}>
             <label style={{ display:'block', fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.7)', marginBottom:6, fontFamily:'Space Grotesk,sans-serif' }}>Email Address</label>

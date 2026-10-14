@@ -32,6 +32,12 @@ try:
                 connection.execute(
                     text(f"ALTER TABLE analysis_runs ADD COLUMN report_data {column_type}")
                 )
+    if "users" in inspector.get_table_names():
+        columns = {column["name"] for column in inspector.get_columns("users")}
+        with engine.begin() as connection:
+            for column in ("first_name", "middle_name", "last_name"):
+                if column not in columns:
+                    connection.execute(text(f"ALTER TABLE users ADD COLUMN {column} VARCHAR(100)"))
 except Exception as e:
     print(f"Warning: Could not auto-create tables: {e}")
 

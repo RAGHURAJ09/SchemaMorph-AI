@@ -39,8 +39,14 @@ export const login = async (email, password) => {
   return data
 }
 
-export const register = async (email, password) => {
-  const { data } = await api.post('/auth/register', { email: email.trim().toLowerCase(), password })
+export const register = async (firstName, middleName, lastName, email, password) => {
+  const { data } = await api.post('/auth/register', {
+    first_name: firstName.trim(),
+    middle_name: middleName.trim() || null,
+    last_name: lastName.trim(),
+    email: email.trim().toLowerCase(),
+    password,
+  })
   return data
 }
 

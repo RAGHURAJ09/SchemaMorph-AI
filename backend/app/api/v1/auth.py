@@ -15,6 +15,9 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 class RegisterRequest(BaseModel):
+    first_name: str | None = None
+    middle_name: str | None = None
+    last_name: str | None = None
     email: EmailStr
     password: str
 
@@ -53,7 +56,13 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
             detail=f"Password does not meet required conditions: {', '.join(errors)}."
         )
 
-    user = User(email=email, password_hash=hash_password(req.password, enforce_rules=True))
+    user = User(
+        first_name=req.first_name.strip() if req.first_name else None,
+        middle_name=req.middle_name.strip() if req.middle_name else None,
+        last_name=req.last_name.strip() if req.last_name else None,
+        email=email,
+        password_hash=hash_password(req.password, enforce_rules=True),
+    )
     db.add(user)
     try:
         db.commit()
