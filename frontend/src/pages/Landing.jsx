@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { TEAM_MEMBERS } from "./Team";
 /* ─── Data ─────────────────────────────────────────────────── */
 import Background3D from "../components/Background3D";
+import HolographicOverlay from "../components/HolographicOverlay";
 const TEAM = [
   { name:"Raghuraj Pratap Rajpoot", role:"Lead & Architect", avatar:"RR", color:"#1D9E75", bg:"rgba(29,158,117,0.12)", desc:"Graph analysis engine, AI pipeline, backend architecture" },
   { name:"Samridhi Singh", role:"Frontend Engineer", avatar:"SS", color:"#534AB7", bg:"rgba(83,74,183,0.12)", desc:"React Flow visualization, UI design, Zustand state management" },
@@ -488,19 +489,32 @@ function HeroSection() {
   const token = useAuthStore(s => s.token);
   return (
     <section style={{ minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"110px 24px 60px",textAlign:"center",position:"relative" }}>
-      <div style={{ display:"inline-flex",alignItems:"center",gap:8,background:"rgba(29,158,117,0.1)",border:"0.5px solid rgba(29,158,117,0.3)",borderRadius:100,padding:"5px 14px",marginBottom:26,animation:"fadeUp 0.6s ease both" }}>
+      <HolographicOverlay />
+      {/* Subtle radial gradient backdrop for hero text contrast */}
+      <div style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "min(780px, 92vw)",
+        height: "560px",
+        background: "radial-gradient(ellipse 65% 55% at 50% 50%, rgba(6, 8, 16, 0.7) 0%, rgba(6, 8, 16, 0.3) 65%, transparent 100%)",
+        pointerEvents: "none",
+        zIndex: 1,
+      }} />
+      <div style={{ position:"relative",zIndex:3, display:"inline-flex",alignItems:"center",gap:8,background:"rgba(29,158,117,0.1)",border:"0.5px solid rgba(29,158,117,0.3)",borderRadius:100,padding:"5px 14px",marginBottom:26,animation:"fadeUp 0.6s ease both" }}>
         <span style={{width:6,height:6,borderRadius:"50%",background:"#1D9E75",display:"inline-block"}}/>
         <span style={{fontSize:12,color:"#5DCAA5",fontFamily:"Space Grotesk,sans-serif",fontWeight:500}}>Graph-first microservice discovery</span>
       </div>
-      <h1 style={{ fontFamily:"Space Grotesk,sans-serif",fontSize:"clamp(2.6rem,6vw,4rem)",fontWeight:700,color:"#fff",lineHeight:1.08,letterSpacing:"-2px",marginBottom:22,animation:"fadeUp 0.6s 0.1s ease both" }}>
+      <h1 style={{ position:"relative",zIndex:3, fontFamily:"Space Grotesk,sans-serif",fontSize:"clamp(2.6rem,6vw,4rem)",fontWeight:700,color:"#fff",lineHeight:1.08,letterSpacing:"-2px",marginBottom:22,animation:"fadeUp 0.6s 0.1s ease both", textShadow:"0 2px 20px rgba(6,8,16,0.8)" }}>
         <TypewriterText text="Split your monolith." delay={300} speed={50}/>
         <br/>
         <span style={{color:"#1D9E75"}}><TypewriterText text="Not your sanity." delay={1800} speed={52}/></span>
       </h1>
-      <p style={{ fontSize:"clamp(1rem,2vw,1.15rem)",color:"rgba(255,255,255,0.44)",lineHeight:1.72,maxWidth:530,margin:"0 auto 40px",fontFamily:"Inter,sans-serif",animation:"fadeUp 0.6s 0.25s ease both" }}>
+      <p style={{ position:"relative",zIndex:3, fontSize:"clamp(1rem,2vw,1.15rem)",color:"rgba(255,255,255,0.44)",lineHeight:1.72,maxWidth:530,margin:"0 auto 40px",fontFamily:"Inter,sans-serif",animation:"fadeUp 0.6s 0.25s ease both" }}>
         Upload a PostgreSQL schema. SchemaMorph builds a dependency graph, runs Louvain clustering, and delivers named microservice boundaries with validation and per-service DDL.
       </p>
-      <div style={{ display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",animation:"fadeUp 0.6s 0.35s ease both" }}>
+      <div style={{ position:"relative",zIndex:3, display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",animation:"fadeUp 0.6s 0.35s ease both" }}>
         {token ? (
           <button onClick={()=>navigate("/upload")} style={{ background:"#1D9E75",color:"#fff",padding:"13px 28px",borderRadius:10,fontSize:15,fontWeight:600,fontFamily:"Space Grotesk,sans-serif",border:"none",cursor:"pointer",display:"inline-block" }}>Go to Dashboard →</button>
         ) : (
@@ -510,7 +524,7 @@ function HeroSection() {
           </>
         )}
       </div>
-      <div style={{ display:"flex",gap:52,justifyContent:"center",marginTop:60,flexWrap:"wrap",animation:"fadeUp 0.6s 0.5s ease both" }}>
+      <div style={{ position:"relative",zIndex:3, display:"flex",gap:52,justifyContent:"center",marginTop:60,flexWrap:"wrap",animation:"fadeUp 0.6s 0.5s ease both" }}>
         {[{v:7,s:" steps",l:"pipeline stages"},{v:8,s:" tables",l:"internal schema"},{v:100,s:"%",l:"deterministic"}].map((st,i)=>(
           <div key={st.l} style={{textAlign:"center"}}>
             <div style={{fontSize:"2.1rem",fontWeight:700,color:"#1D9E75",fontFamily:"Space Grotesk,sans-serif",lineHeight:1}}><AnimCounter target={st.v} suffix={st.s} delay={800+i*200}/></div>
