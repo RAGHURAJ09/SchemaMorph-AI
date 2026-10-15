@@ -64,11 +64,6 @@ export default function Login() {
     }
   }
 
-  const fillDemoCredentials = () => {
-    setEmail('pipeline_tester@schemamorph.ai')
-    setPassword('TestPassword123!')
-    toast('Demo credentials applied!', { icon: '⚡' })
-  }
 
   return (
     <div style={{ minHeight:'100vh', background:'radial-gradient(ellipse 60% 40% at 50% 0%,rgba(29,158,117,0.1) 0%,transparent 60%),#090c12', display:'flex', alignItems:'center', justifyContent:'center', padding:'24px', paddingTop:'86px', fontFamily:'Inter,system-ui,sans-serif' }}>
@@ -147,31 +142,7 @@ export default function Login() {
             {loading ? 'Logging in...' : 'Log In'}
           </button>
 
-          {/* Quick Demo Credentials */}
-          <button
-            type="button"
-            onClick={fillDemoCredentials}
-            style={{
-              width: '100%',
-              padding: '10px 14px',
-              marginTop: 12,
-              background: 'rgba(29, 158, 117, 0.08)',
-              color: '#34d399',
-              border: '1px dashed rgba(29, 158, 117, 0.3)',
-              borderRadius: 10,
-              fontSize: 12,
-              fontWeight: 600,
-              fontFamily: 'Space Grotesk,sans-serif',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              transition: 'all 0.2s',
-            }}
-          >
-            ⚡ Use Demo Account (Auto-fill)
-          </button>
+
         </form>
 
         <p style={{ marginTop:22, textAlign:'center', fontSize:13, color:'rgba(255,255,255,0.45)' }}>
