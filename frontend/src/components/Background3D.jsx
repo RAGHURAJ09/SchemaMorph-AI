@@ -674,7 +674,7 @@ function VisibilityPause() {
       if (document.hidden) {
         gl.setAnimationLoop(null);
       } else {
-        gl.setAnimationLoop(() => {});
+        gl.setAnimationLoop(() => { });
         // R3F manages its own loop, but we signal to re-enable
       }
     };
