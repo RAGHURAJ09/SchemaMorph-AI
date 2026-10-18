@@ -140,26 +140,29 @@ const Captcha = forwardRef(function Captcha({ onChange, onValidateChange }, ref)
     drawCaptcha(code)
   }, [drawCaptcha])
 
-  // Audio readout using Web Speech API
+  // Audio readout using Web Speech API - speaks characters directly (e.g., "2, S, E")
   const speakCaptcha = () => {
     if (!('speechSynthesis' in window)) {
       alert('Audio CAPTCHA is not supported in this browser.')
       return
     }
+
+    // Toggle off if currently speaking
+    if (isSpeaking) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+      return
+    }
+
     window.speechSynthesis.cancel()
     setIsSpeaking(true)
 
-    // Formulate clear, spaced readout: e.g. "Letter A. Number 7. Letter K."
-    const phrases = captchaCode.split('').map((char) => {
-      if (/[0-9]/.test(char)) {
-        return `Number ${char}`
-      }
-      return `Letter ${char}`
-    })
-
-    const utterance = new SpeechSynthesisUtterance(phrases.join('. ') + '.')
-    utterance.rate = 0.82
+    // Direct character-by-character readout with natural pauses (e.g. "2, S, E")
+    const textToSpeak = captchaCode.split('').join(', ')
+    const utterance = new SpeechSynthesisUtterance(textToSpeak)
+    utterance.rate = 0.78
     utterance.pitch = 1.0
+    utterance.lang = 'en-US'
     utterance.onend = () => setIsSpeaking(false)
     utterance.onerror = () => setIsSpeaking(false)
     window.speechSynthesis.speak(utterance)
