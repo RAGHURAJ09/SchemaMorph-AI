@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { login } from '../api/client'
 import useAuthStore from '../store/authStore'
 import FloatingNav from '../components/FloatingNav'
 import Background3D from '../components/Background3D'
+import Captcha from '../components/Captcha'
 
 // Eye icons for show/hide password
 const EyeIcon = () => (
@@ -26,6 +27,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const captchaRef = useRef(null)
   
   const navigate = useNavigate()
   const token = useAuthStore((state) => state.token)
@@ -43,6 +45,10 @@ export default function Login() {
     e.preventDefault()
     if (!email.trim() || !password) {
       toast.error('Please enter both email and password.')
+      return
+    }
+    if (!captchaRef.current?.validate()) {
+      toast.error('Please enter the correct CAPTCHA code.')
       return
     }
     setLoading(true)
@@ -136,13 +142,18 @@ export default function Login() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ width:'100%', padding:'13px', background:'#1D9E75', color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:600, fontFamily:'Space Grotesk,sans-serif', cursor:loading?'not-allowed':'pointer', opacity:loading?0.7:1, transition:'all 0.2s', boxShadow: '0 4px 14px rgba(29,158,117,0.3)' }}
-          >
-            {loading ? 'Logging in...' : 'Log In'}
-          </button>
+            {/* Security CAPTCHA */}
+            <div style={{ marginTop: 18, marginBottom: 22 }}>
+              <Captcha ref={captchaRef} />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{ width:'100%', padding:'13px', background:'#1D9E75', color:'#fff', border:'none', borderRadius:10, fontSize:14, fontWeight:600, fontFamily:'Space Grotesk,sans-serif', cursor:loading?'not-allowed':'pointer', opacity:loading?0.7:1, transition:'all 0.2s', boxShadow: '0 4px 14px rgba(29,158,117,0.3)' }}
+            >
+              {loading ? 'Logging in...' : 'Log In'}
+            </button>
 
 
         </form>

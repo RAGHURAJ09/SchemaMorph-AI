@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { register } from '../api/client'
 import FloatingNav from '../components/FloatingNav'
 import Background3D from '../components/Background3D'
+import Captcha from '../components/Captcha'
 
 // Icons
 const EyeIcon = () => (
@@ -40,6 +41,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const [showRequirementsModal, setShowRequirementsModal] = useState(false)
   const passwordInputRef = useRef(null)
+  const captchaRef = useRef(null)
 
   const navigate = useNavigate()
 
@@ -105,6 +107,12 @@ export default function Register() {
       toast.error('Password does not meet required conditions!', {
         duration: 4000,
       })
+      return
+    }
+
+    // Verify Security CAPTCHA
+    if (!captchaRef.current?.validate()) {
+      toast.error('Please enter the correct CAPTCHA code.')
       return
     }
 
@@ -312,6 +320,11 @@ export default function Register() {
                 </div>
               )
             })}
+          </div>
+
+          {/* Security CAPTCHA */}
+          <div style={{ marginTop: 18, marginBottom: 22 }}>
+            <Captcha ref={captchaRef} />
           </div>
 
           {/* SIGNUP BUTTON */}
