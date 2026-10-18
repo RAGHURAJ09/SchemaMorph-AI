@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import Tilt from "react-parallax-tilt";
-import { motion } from "framer-motion";
+import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 import { TEAM_MEMBERS } from "./Team";
 /* ─── Data ─────────────────────────────────────────────────── */
 import Background3D from "../components/Background3D";
@@ -212,29 +212,166 @@ function AnimCounter({ target, suffix = "", delay = 0 }) {
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
-/* ─── Step Row ───────────────────────────────────────────────── */
-function StepRow({ step, i }) {
-  const ref = useRef(null); const [vis, setVis] = useState(false);
-  useEffect(() => { const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold: .2 }); if (ref.current) obs.observe(ref.current); return () => obs.disconnect(); }, []);
+/* ─── Cybernetic Scroll Progress Bar ─────────────────────────── */
+function ScrollProgressBar() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
   return (
-    <div ref={ref} style={{ display: "flex", gap: "14px", alignItems: "flex-start", opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(20px)", transition: `opacity 0.5s ${i * .09}s ease,transform 0.5s ${i * .09}s ease` }}>
-      <div style={{ width: 46, height: 46, borderRadius: 10, flexShrink: 0, background: `${step.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, color: step.color, border: `1px solid ${step.color}30`, fontFamily: "Space Grotesk,sans-serif" }}>{step.icon}</div>
-      <div style={{ flex: 1, background: "rgba(255,255,255,0.025)", border: "0.5px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "15px 18px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
-          <span style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 10, fontWeight: 700, color: step.color, letterSpacing: "0.1em" }}>{step.num}</span>
-          <h3 style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 14, color: "#fff", margin: 0 }}>{step.title}</h3>
-        </div>
-        <p style={{ fontFamily: "Inter,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.38)", lineHeight: 1.65, margin: 0 }}>{step.body}</p>
-      </div>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 9999, pointerEvents: "none" }}>
+      <motion.div
+        style={{
+          scaleX,
+          transformOrigin: "0%",
+          height: "100%",
+          background: "linear-gradient(90deg, #1D9E75 0%, #22d3ee 50%, #534AB7 100%)",
+          boxShadow: "0 0 12px rgba(34, 211, 238, 0.8), 0 0 24px rgba(29, 158, 117, 0.5)",
+        }}
+      />
     </div>
+  );
+}
+
+/* ─── Scroll-to-Top Floating Button ──────────────────────────── */
+function ScrollToTopButton() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const handler = () => setShow(window.scrollY > 350);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.8, y: 20 }}
+          whileHover={{ scale: 1.12, boxShadow: "0 0 25px rgba(29,158,117,0.6)" }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          style={{
+            position: "fixed",
+            bottom: 28,
+            right: 28,
+            zIndex: 90,
+            background: "rgba(9, 12, 18, 0.88)",
+            backdropFilter: "blur(14px)",
+            border: "1px solid rgba(29, 158, 117, 0.45)",
+            color: "#5DCAA5",
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+          }}
+          title="Back to top"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="18 15 12 9 6 15" />
+          </svg>
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/* ─── Step Row (Connected Laser Pipeline) ─────────────────────── */
+function StepRow({ step, i, isLast }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -35 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.55, delay: i * 0.08, ease: "easeOut" }}
+      style={{ display: "flex", gap: "18px", alignItems: "stretch", position: "relative" }}
+    >
+      {/* Connected vertical laser spine */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0, width: 48 }}>
+        <motion.div
+          whileHover={{ scale: 1.15, rotate: 6 }}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 12,
+            background: `${step.color}18`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 18,
+            color: step.color,
+            border: `1.5px solid ${step.color}45`,
+            fontFamily: "Space Grotesk,sans-serif",
+            boxShadow: `0 0 16px ${step.color}25`,
+            position: "relative",
+            zIndex: 2,
+          }}
+        >
+          {step.icon}
+        </motion.div>
+        {!isLast && (
+          <div style={{
+            width: 2,
+            flex: 1,
+            minHeight: 28,
+            background: `linear-gradient(to bottom, ${step.color}77, rgba(255,255,255,0.06))`,
+            margin: "4px 0",
+          }} />
+        )}
+      </div>
+
+      {/* Step card content */}
+      <motion.div
+        whileHover={{ x: 6, borderColor: `${step.color}55` }}
+        transition={{ duration: 0.2 }}
+        style={{
+          flex: 1,
+          background: "rgba(255,255,255,0.025)",
+          backdropFilter: "blur(10px)",
+          border: "0.5px solid rgba(255,255,255,0.08)",
+          borderRadius: 12,
+          padding: "16px 20px",
+          marginBottom: isLast ? 0 : 14,
+          transition: "border-color 0.25s, box-shadow 0.25s",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+          <span style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 11, fontWeight: 700, color: step.color, letterSpacing: "0.12em", background: `${step.color}15`, padding: "2px 8px", borderRadius: 4 }}>
+            {step.num}
+          </span>
+          <h3 style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 15, color: "#fff", margin: 0 }}>
+            {step.title}
+          </h3>
+        </div>
+        <p style={{ fontFamily: "Inter,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.65, margin: 0 }}>
+          {step.body}
+        </p>
+      </motion.div>
+    </motion.div>
   );
 }
 
 /* ─── Fade-in wrapper ────────────────────────────────────────── */
 function FadeIn({ children, i = 0, style = {} }) {
-  const ref = useRef(null); const [vis, setVis] = useState(false);
-  useEffect(() => { const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold: .15 }); if (ref.current) obs.observe(ref.current); return () => obs.disconnect(); }, []);
-  return <div ref={ref} style={{ ...style, opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(20px)", transition: `opacity 0.5s ${i * .09}s ease,transform 0.5s ${i * .09}s ease` }}>{children}</div>;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }}
+      style={style}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 /* ─── Navbar ─────────────────────────────────────────────────── */
@@ -503,7 +640,7 @@ function HeroSection() {
         transform: "translate(-50%, -50%)",
         width: "min(780px, 92vw)",
         height: "560px",
-        background: "radial-gradient(ellipse 65% 55% at 50% 50%, rgba(6, 8, 16, 0.7) 0%, rgba(6, 8, 16, 0.3) 65%, transparent 100%)",
+        background: "radial-gradient(ellipse 65% 55% at 50% 50%, rgba(6, 8, 16, 0.3) 0%, transparent 80%)",
         pointerEvents: "none",
         zIndex: 1,
       }} />
@@ -537,6 +674,33 @@ function HeroSection() {
           </div>
         ))}
       </div>
+
+      {/* Scroll Down Indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.1, duration: 0.8 }}
+        style={{
+          position: "relative",
+          zIndex: 3,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 6,
+          marginTop: 45,
+          cursor: "pointer",
+        }}
+        onClick={() => document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" })}
+      >
+        <span style={{ fontSize: 11, fontFamily: "Space Grotesk,sans-serif", color: "rgba(255,255,255,0.35)", letterSpacing: "0.14em", textTransform: "uppercase" }}>Scroll to explore</span>
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+          style={{ color: "#1D9E75", fontSize: 16 }}
+        >
+          ↓
+        </motion.div>
+      </motion.div>
     </section>
   );
 }
@@ -544,36 +708,48 @@ function HeroSection() {
 /* ─── Dashboard Preview Section ──────────────────────────────── */
 function DashboardSection() {
   return (
-    <section style={{ background: "rgba(9,12,18,0.85)", padding: "90px 24px", position: "relative" }}>
+    <section id="dashboard" style={{ background: "transparent", padding: "90px 24px", position: "relative" }}>
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>
         <FadeIn style={{ textAlign: "center", marginBottom: 48 }}>
           <p style={{ color: "#185FA5", fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", marginBottom: 10 }}>DASHBOARD</p>
           <h2 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.7rem,4vw,2.6rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", margin: "0 0 10px" }}>See your schema come alive</h2>
           <p style={{ fontFamily: "Inter,sans-serif", fontSize: 14, color: "rgba(255,255,255,0.36)", maxWidth: 400, margin: "0 auto" }}>Drag the service nodes — they're live. The graph responds to your cursor.</p>
         </FadeIn>
-        <FadeIn i={1}>
-          <div style={{ borderRadius: 16, border: "0.5px solid rgba(255,255,255,0.1)", overflow: "hidden", background: "rgba(255,255,255,0.02)" }}>
-            {/* Tab bar */}
-            <div style={{ background: "rgba(255,255,255,0.03)", borderBottom: "0.5px solid rgba(255,255,255,0.08)", display: "flex", padding: "0 20px" }}>
-              {["Dependency Graph", "Target Schemas", "Queries"].map((t, i) => (
-                <div key={t} style={{ padding: "12px 18px", fontSize: 13, fontFamily: "Space Grotesk,sans-serif", color: i === 0 ? "#1D9E75" : "rgba(255,255,255,0.35)", fontWeight: i === 0 ? 600 : 400, borderBottom: i === 0 ? "2px solid #1D9E75" : "2px solid transparent" }}>{t}</div>
+        <motion.div
+          initial={{ opacity: 0, y: 45, scale: 0.98 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            borderRadius: 16,
+            border: "0.5px solid rgba(29, 158, 117, 0.25)",
+            overflow: "hidden",
+            background: "rgba(9, 13, 24, 0.72)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            boxShadow: "0 25px 60px -15px rgba(0,0,0,0.7), 0 0 35px -10px rgba(29,158,117,0.2)",
+          }}
+        >
+          {/* Tab bar */}
+          <div style={{ background: "rgba(255,255,255,0.03)", borderBottom: "0.5px solid rgba(255,255,255,0.08)", display: "flex", padding: "0 20px" }}>
+            {["Dependency Graph", "Target Schemas", "Queries"].map((t, i) => (
+              <div key={t} style={{ padding: "12px 18px", fontSize: 13, fontFamily: "Space Grotesk,sans-serif", color: i === 0 ? "#1D9E75" : "rgba(255,255,255,0.35)", fontWeight: i === 0 ? 600 : 400, borderBottom: i === 0 ? "2px solid #1D9E75" : "2px solid transparent" }}>{t}</div>
+            ))}
+          </div>
+          {/* Interactive canvas */}
+          <div style={{ position: "relative", height: 360, overflow: "hidden" }}>
+            <DashboardCanvas />
+            {/* Stats bar overlay */}
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(9,12,18,0.84)", backdropFilter: "blur(8px)", borderTop: "0.5px solid rgba(255,255,255,0.07)", display: "flex", padding: "10px 20px" }}>
+              {[{ l: "Tables", v: "24" }, { l: "Services", v: "6" }, { l: "Edges", v: "47" }, { l: "Validation", v: "✓ Pass" }].map((s, i) => (
+                <div key={s.l} style={{ flex: 1, textAlign: "center", borderRight: i < 3 ? "0.5px solid rgba(255,255,255,0.07)" : "none" }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: i === 3 ? "#1D9E75" : "#fff", fontFamily: "Space Grotesk,sans-serif" }}>{s.v}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", fontFamily: "Inter,sans-serif", marginTop: 2 }}>{s.l}</div>
+                </div>
               ))}
             </div>
-            {/* Interactive canvas */}
-            <div style={{ position: "relative", height: 360, overflow: "hidden" }}>
-              <DashboardCanvas />
-              {/* Stats bar overlay */}
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(9,12,18,0.84)", backdropFilter: "blur(8px)", borderTop: "0.5px solid rgba(255,255,255,0.07)", display: "flex", padding: "10px 20px" }}>
-                {[{ l: "Tables", v: "24" }, { l: "Services", v: "6" }, { l: "Edges", v: "47" }, { l: "Validation", v: "✓ Pass" }].map((s, i) => (
-                  <div key={s.l} style={{ flex: 1, textAlign: "center", borderRight: i < 3 ? "0.5px solid rgba(255,255,255,0.07)" : "none" }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: i === 3 ? "#1D9E75" : "#fff", fontFamily: "Space Grotesk,sans-serif" }}>{s.v}</div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", fontFamily: "Inter,sans-serif", marginTop: 2 }}>{s.l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
-        </FadeIn>
+        </motion.div>
       </div>
     </section>
   );
@@ -582,14 +758,16 @@ function DashboardSection() {
 /* ─── How it works ───────────────────────────────────────────── */
 function HowSection() {
   return (
-    <section id="how" style={{ background: "rgba(12,16,24,0.9)", padding: "90px 24px" }}>
+    <section id="how" style={{ background: "transparent", padding: "90px 24px", position: "relative" }}>
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 52 }}>
+        <FadeIn style={{ textAlign: "center", marginBottom: 52 }}>
           <p style={{ color: "#1D9E75", fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", marginBottom: 10 }}>7-STEP PIPELINE</p>
           <h2 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.7rem,4vw,2.6rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", margin: 0 }}>How it works</h2>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {STEPS.map((step, i) => <StepRow key={step.num} step={step} i={i} />)}
+        </FadeIn>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {STEPS.map((step, i) => (
+            <StepRow key={step.num} step={step} i={i} isLast={i === STEPS.length - 1} />
+          ))}
         </div>
       </div>
     </section>
@@ -599,21 +777,27 @@ function HowSection() {
 /* ─── Features ───────────────────────────────────────────────── */
 function FeaturesSection() {
   return (
-    <section id="features" style={{ background: "rgba(9,12,18,0.9)", padding: "90px 24px" }}>
+    <section id="features" style={{ background: "transparent", padding: "90px 24px", position: "relative" }}>
       <div style={{ maxWidth: 940, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <FadeIn style={{ textAlign: "center", marginBottom: 48 }}>
           <p style={{ color: "#534AB7", fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", marginBottom: 10 }}>WHAT'S INSIDE</p>
           <h2 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.7rem,4vw,2.6rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", margin: 0 }}>Built for real decomposition work</h2>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 14 }}>
+        </FadeIn>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16 }}>
           {FEATURES.map((f, i) => (
-            <FadeIn key={f.label} i={i}>
-              <TiltCard style={{ background: "rgba(255,255,255,0.025)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "22px 22px" }}>
-                <div style={{ fontSize: 19, marginBottom: 9, color: "#1D9E75" }}>{f.icon}</div>
-                <div style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 14, color: "#fff", marginBottom: 5 }}>{f.label}</div>
-                <div style={{ fontFamily: "Inter,sans-serif", fontSize: 12, color: "rgba(255,255,255,0.38)", lineHeight: 1.6 }}>{f.text}</div>
+            <motion.div
+              key={f.label}
+              initial={{ opacity: 0, y: 35, scale: 0.96 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: i * 0.08, ease: "easeOut" }}
+            >
+              <TiltCard style={{ background: "rgba(10, 16, 28, 0.65)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "0.5px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "22px 22px", height: "100%" }}>
+                <div style={{ fontSize: 20, marginBottom: 10, color: "#1D9E75" }}>{f.icon}</div>
+                <div style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 15, color: "#fff", marginBottom: 6 }}>{f.label}</div>
+                <div style={{ fontFamily: "Inter,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.6 }}>{f.text}</div>
               </TiltCard>
-            </FadeIn>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -663,7 +847,7 @@ function SimpleMemberCard({ member }) {
 
 function TeamPage() {
   return (
-    <section style={{ minHeight: "100vh", background: "radial-gradient(ellipse 65% 45% at 50% 0%,rgba(83,74,183,0.13) 0%,transparent 60%),rgba(9,12,18,0.97)", padding: "110px 24px 80px" }}>
+    <section style={{ minHeight: "100vh", background: "transparent", padding: "110px 24px 80px" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 64 }}>
           <p style={{ color: "#534AB7", fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", marginBottom: 12 }}>THE PEOPLE</p>
@@ -704,7 +888,9 @@ export default function Landing() {
         @keyframes blink{50%{opacity:0}}
         @keyframes pulse{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.22);opacity:0}}
       `}</style>
+      <ScrollProgressBar />
       <Background3D />
+      <ScrollToTopButton />
       <div style={{ position: "relative", zIndex: 1, minHeight: "100vh", background: "transparent", overflowX: "hidden" }}>
         <NavBar page={page} setPage={setPage} />
         {page === "home" ? (
@@ -713,7 +899,7 @@ export default function Landing() {
             <DashboardSection />
             <HowSection />
             <FeaturesSection />
-            <section style={{ padding: "80px 24px", textAlign: "center" }}>
+            <section style={{ padding: "100px 24px", textAlign: "center", background: "transparent", position: "relative" }}>
               <div style={{ maxWidth: 500, margin: "0 auto" }}>
                 <h2 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.7rem,4vw,2.4rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", marginBottom: 14 }}>Ready to decompose your schema?</h2>
                 <p style={{ color: "rgba(255,255,255,0.38)", fontFamily: "Inter,sans-serif", fontSize: 14, lineHeight: 1.7, marginBottom: 30 }}>Upload your PostgreSQL DDL and get a full microservice decomposition report in seconds.</p>
@@ -731,7 +917,7 @@ export default function Landing() {
             </section>
           </>
         ) : <TeamPage />}
-        <footer style={{ background: "rgba(6,8,16,0.96)", borderTop: "0.5px solid rgba(255,255,255,0.06)", padding: "20px 28px" }}>
+        <footer style={{ background: "rgba(6,8,16,0.75)", backdropFilter: "blur(16px)", borderTop: "0.5px solid rgba(255,255,255,0.06)", padding: "24px 28px" }}>
           <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <p style={{ fontFamily: "Inter,sans-serif", fontSize: 12, color: "rgba(255,255,255,0.22)" }}>© 2025 SchemaMorph AI · Raghuraj · Samridhi Singh · Samridhi Jaiswal</p>
             <div style={{ display: "flex", gap: 16 }}>

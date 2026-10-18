@@ -69,17 +69,51 @@ function useMousePosition() {
   return mouse;
 }
 
-// ── Scroll tracker (normalized 0..1) ────────────────────────────────────────
+// ── Scroll tracker (normalized 0..1 with smoothed interpolation & velocity) ──
 function useScrollProgress() {
-  const scroll = useRef(0);
+  const scroll = useRef({ current: 0, target: 0, velocity: 0 });
   useEffect(() => {
-    const handler = () => {
-      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      scroll.current = Math.min(1, Math.max(0, window.scrollY / max));
+    let lastY = window.scrollY;
+    let lastTime = performance.now();
+    let animId;
+
+    const onScroll = (e) => {
+      let currentY = window.scrollY;
+      let max = Math.max(1, (document.scrollingElement || document.documentElement).scrollHeight - window.innerHeight);
+
+      if (e && e.target && e.target !== document && typeof e.target.scrollTop === 'number' && e.target.scrollHeight > e.target.clientHeight) {
+        currentY = e.target.scrollTop;
+        max = Math.max(1, e.target.scrollHeight - e.target.clientHeight);
+      }
+
+      const raw = Math.min(1, Math.max(0, currentY / max));
+
+      const now = performance.now();
+      const dt = Math.max(1, now - lastTime);
+      const dy = currentY - lastY;
+      const v = Math.min(3, (Math.abs(dy) / dt) * 1.5);
+
+      scroll.current.target = raw;
+      scroll.current.velocity = v;
+      lastY = currentY;
+      lastTime = now;
     };
-    window.addEventListener('scroll', handler, { passive: true });
-    handler();
-    return () => window.removeEventListener('scroll', handler);
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    onScroll();
+
+    const decayLoop = () => {
+      scroll.current.velocity *= 0.92;
+      animId = requestAnimationFrame(decayLoop);
+    };
+    animId = requestAnimationFrame(decayLoop);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('scroll', onScroll, { capture: true });
+      cancelAnimationFrame(animId);
+    };
   }, []);
   return scroll;
 }
@@ -87,57 +121,65 @@ function useScrollProgress() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // CENTRAL DATABASE CYLINDER
 // ═══════════════════════════════════════════════════════════════════════════════
-function CentralDatabase({ reducedMotion, isMobile }) {
+function CentralDatabase({ reducedMotion, isMobile, scroll }) {
   const groupRef = useRef();
   const ringsRef = useRef([]);
+  const diskRefs = useRef([]);
   const diskCount = 5;
 
-  const diskGeo = useMemo(() => new THREE.CylinderGeometry(1.1, 1.1, 0.18, 32), []);
-  const ringGeo = useMemo(() => new THREE.TorusGeometry(1.6, 0.015, 8, 64), []);
-  const scanRingGeo = useMemo(() => new THREE.TorusGeometry(1.35, 0.025, 8, 64), []);
+  const diskGeo = useMemo(() => new THREE.CylinderGeometry(1.2, 1.2, 0.18, 36), []);
+  const ringGeo = useMemo(() => new THREE.TorusGeometry(1.7, 0.025, 12, 64), []);
+  const scanRingGeo = useMemo(() => new THREE.TorusGeometry(1.45, 0.035, 12, 64), []);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!groupRef.current) return;
     const t = state.clock.elapsedTime;
-    const speed = reducedMotion ? 0.05 : 0.15;
-    groupRef.current.rotation.y = t * speed;
+    const sp = scroll?.current?.target ?? 0;
+    const vel = scroll?.current?.velocity ?? 0;
+    const speed = (reducedMotion ? 0.05 : 0.2) + vel * 0.5;
+    groupRef.current.rotation.y = t * speed + sp * Math.PI * 0.8;
+
+    // Dramatic Disks accordion expansion with scroll
+    const expansion = sp * 1.5;
+    diskRefs.current.forEach((disk, i) => {
+      if (!disk) return;
+      const baseY = (i - (diskCount - 1) / 2) * (0.35 + expansion);
+      disk.position.y = baseY;
+      disk.rotation.y = (i - 2) * sp * 0.75;
+    });
 
     ringsRef.current.forEach((ring, i) => {
       if (!ring) return;
-      const phase = t * (0.3 + i * 0.15) + i * Math.PI * 0.5;
-      ring.position.y = Math.sin(phase) * 1.2;
-      ring.rotation.x = Math.PI / 2 + Math.sin(t * 0.2 + i) * 0.15;
-      ring.rotation.z = t * (0.1 + i * 0.05);
+      const phase = t * (0.4 + i * 0.2 + vel * 0.6) + i * Math.PI * 0.5;
+      ring.position.y = Math.sin(phase) * (1.3 + expansion * 0.9);
+      ring.rotation.x = Math.PI / 2 + Math.sin(t * 0.25 + i) * 0.25;
+      ring.rotation.z = t * (0.15 + i * 0.08 + vel * 0.3) + sp * 2;
     });
   });
 
   return (
-    <group ref={groupRef} position={isMobile ? [0, 0.6, -3.2] : [2.4, 0.3, -2.5]}>
-      {/* Stacked database disks */}
+    <group ref={groupRef} position={isMobile ? [0, 0.6, -3.2] : [2.0, 0.2, -2.5]}>
+      {/* Stacked database disks with vibrant cybernetic glow */}
       {Array.from({ length: diskCount }).map((_, i) => {
         const y = (i - (diskCount - 1) / 2) * 0.35;
+        const isCenter = i === 2;
         return (
-          <mesh key={`disk-${i}`} position={[0, y, 0]} geometry={diskGeo}>
-            <meshStandardMaterial
-              color="#0a1628"
-              metalness={0.85}
-              roughness={0.2}
-              emissive="#1D9E75"
-              emissiveIntensity={0.12 + (i === 2 ? 0.12 : 0)}
-              transparent
-              opacity={0.92}
-            />
-          </mesh>
-        );
-      })}
-
-      {/* Disk edge glow rings */}
-      {Array.from({ length: diskCount }).map((_, i) => {
-        const y = (i - (diskCount - 1) / 2) * 0.35;
-        return (
-          <mesh key={`edge-${i}`} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={ringGeo}>
-            <meshBasicMaterial color="#1D9E75" transparent opacity={0.35} />
-          </mesh>
+          <group key={`disk-group-${i}`} ref={(el) => (diskRefs.current[i] = el)} position={[0, y, 0]}>
+            <mesh geometry={diskGeo}>
+              <meshStandardMaterial
+                color="#0f293d"
+                metalness={0.9}
+                roughness={0.15}
+                emissive={isCenter ? "#22d3ee" : "#1D9E75"}
+                emissiveIntensity={isCenter ? 0.95 : 0.65}
+                transparent
+                opacity={0.96}
+              />
+            </mesh>
+            <mesh rotation={[Math.PI / 2, 0, 0]} geometry={ringGeo}>
+              <meshBasicMaterial color={isCenter ? "#22d3ee" : "#1D9E75"} transparent opacity={0.8} />
+            </mesh>
+          </group>
         );
       })}
 
@@ -148,12 +190,12 @@ function CentralDatabase({ reducedMotion, isMobile }) {
           ref={(el) => (ringsRef.current[i] = el)}
           geometry={scanRingGeo}
         >
-          <meshBasicMaterial color={i === 0 ? '#22d3ee' : '#a78bfa'} transparent opacity={0.45} />
+          <meshBasicMaterial color={i === 0 ? '#22d3ee' : '#c084fc'} transparent opacity={0.85} />
         </mesh>
       ))}
 
       {/* Core glow */}
-      <pointLight color="#1D9E75" intensity={2.5} distance={8} decay={2} />
+      <pointLight color="#22d3ee" intensity={5.0} distance={12} decay={2} />
     </group>
   );
 }
@@ -240,7 +282,7 @@ function NetworkNodes({ reducedMotion, isMobile }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // DEPENDENCY EDGES – lines connecting schema groups with flowing particles
 // ═══════════════════════════════════════════════════════════════════════════════
-function DependencyEdges({ reducedMotion }) {
+function DependencyEdges({ reducedMotion, scroll }) {
   const linesRef = useRef();
 
   // Build line segment positions
@@ -276,20 +318,22 @@ function DependencyEdges({ reducedMotion }) {
       </lineSegments>
       {/* Flowing particles on edges */}
       {!reducedMotion && edgeMeta.map((edge, i) => (
-        <EdgeParticle key={i} from={edge.from} to={edge.to} index={i} />
+        <EdgeParticle key={i} from={edge.from} to={edge.to} index={i} scroll={scroll} />
       ))}
     </group>
   );
 }
 
-function EdgeParticle({ from, to, index }) {
+function EdgeParticle({ from, to, index, scroll }) {
   const ref = useRef();
   useFrame((state) => {
     if (!ref.current) return;
     const t = state.clock.elapsedTime;
-    const progress = ((t * 0.3 + index * 0.37) % 1);
+    const vel = scroll?.current?.velocity ?? 0;
+    const speedMult = 1 + vel * 2.5;
+    const progress = ((t * 0.3 * speedMult + index * 0.37) % 1);
     ref.current.position.lerpVectors(from, to, progress);
-    ref.current.material.opacity = Math.sin(progress * Math.PI) * 0.9;
+    ref.current.material.opacity = Math.sin(progress * Math.PI) * (0.8 + Math.min(0.2, vel));
   });
 
   return (
@@ -302,43 +346,49 @@ function EdgeParticle({ from, to, index }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SCHEMA GROUP NODES – larger spheres at group positions with glow
 // ═══════════════════════════════════════════════════════════════════════════════
-function SchemaGroupNodes({ reducedMotion }) {
-  const refs = useRef([]);
+function SchemaGroupNodes({ reducedMotion, scroll }) {
+  const groupsRef = useRef([]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const speed = reducedMotion ? 0.15 : 0.4;
-    refs.current.forEach((mesh, i) => {
-      if (!mesh) return;
-      const pulse = Math.sin(t * speed + i * 1.2) * 0.08 + 1;
-      mesh.scale.setScalar(pulse);
+    const sp = scroll?.current?.target ?? 0;
+    // As user scrolls, the schema clusters spread outward (visualizing decomposition into microservices!)
+    const expansion = 1 + sp * 1.25;
+
+    groupsRef.current.forEach((group, i) => {
+      if (!group) return;
+      const orig = SCHEMA_GROUPS[i].position;
+      const pulse = Math.sin(t * speed + i * 1.2) * 0.1 + 1;
+      group.position.set(orig[0] * expansion, orig[1] * expansion, orig[2]);
+      group.scale.setScalar(pulse);
     });
   });
 
   return (
     <group>
       {SCHEMA_GROUPS.map((group, i) => (
-        <group key={group.name} position={group.position}>
+        <group key={group.name} ref={(el) => (groupsRef.current[i] = el)} position={group.position}>
           {/* Outer glow sphere */}
           <mesh>
-            <sphereGeometry args={[0.35, 16, 16]} />
-            <meshBasicMaterial color={group.color} transparent opacity={0.08} />
+            <sphereGeometry args={[0.42, 16, 16]} />
+            <meshBasicMaterial color={group.color} transparent opacity={0.25} />
           </mesh>
           {/* Core node */}
-          <mesh ref={(el) => (refs.current[i] = el)}>
-            <sphereGeometry args={[0.18, 16, 16]} />
+          <mesh>
+            <sphereGeometry args={[0.22, 16, 16]} />
             <meshStandardMaterial
               color={group.color}
               emissive={group.color}
-              emissiveIntensity={0.55}
-              metalness={0.6}
-              roughness={0.3}
+              emissiveIntensity={1.3}
+              metalness={0.7}
+              roughness={0.2}
               transparent
-              opacity={0.92}
+              opacity={0.96}
             />
           </mesh>
           {/* Point light */}
-          <pointLight color={group.color} intensity={0.9} distance={5} decay={2} />
+          <pointLight color={group.color} intensity={2.2} distance={7} decay={2} />
         </group>
       ))}
     </group>
@@ -562,35 +612,67 @@ function PulsingHighlights({ reducedMotion }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CAMERA CONTROLLER – slow drift + mouse parallax + scroll depth
+// CAMERA CONTROLLER – cinematic multi-phase trajectory + mouse parallax + scroll
 // ═══════════════════════════════════════════════════════════════════════════════
 function CameraController({ mouse, scroll, reducedMotion }) {
   const { camera } = useThree();
-  const targetPos = useRef(new THREE.Vector3(0, 0, 10));
   const currentPos = useRef(new THREE.Vector3(0, 0, 10));
+  const lookTarget = useRef(new THREE.Vector3(0, 0, -2));
+  const smoothScroll = useRef(0);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
-    const driftSpeed = reducedMotion ? 0.02 : 0.06;
-    const parallaxStrength = reducedMotion ? 0.2 : 0.8;
+    const driftSpeed = reducedMotion ? 0.02 : 0.05;
+    const parallaxStrength = reducedMotion ? 0.15 : 0.65;
 
-    // Slow cinematic drift
-    const baseDriftX = Math.sin(t * driftSpeed) * 0.5;
-    const baseDriftY = Math.cos(t * driftSpeed * 0.7) * 0.25;
+    // Smoothly interpolate scroll target
+    const targetScroll = scroll?.current?.target ?? 0;
+    smoothScroll.current += (targetScroll - smoothScroll.current) * Math.min(1, delta * 4.5);
+    const sp = smoothScroll.current;
 
-    // Mouse parallax
+    // Multi-waypoint cinematic curve based on page scroll:
+    let camX = 0;
+    let camY = 0;
+    let camZ = 10;
+    let lookX = 0;
+    let lookY = 0;
+
+    if (sp < 0.33) {
+      const p = sp / 0.33;
+      camX = THREE.MathUtils.lerp(0, 2.0, p);
+      camY = THREE.MathUtils.lerp(0, -1.0, p);
+      camZ = THREE.MathUtils.lerp(10, 8.8, p);
+      lookX = THREE.MathUtils.lerp(0, 0.6, p);
+      lookY = THREE.MathUtils.lerp(0.2, -0.2, p);
+    } else if (sp < 0.66) {
+      const p = (sp - 0.33) / 0.33;
+      camX = THREE.MathUtils.lerp(2.0, -2.2, p);
+      camY = THREE.MathUtils.lerp(-1.0, -2.6, p);
+      camZ = THREE.MathUtils.lerp(8.8, 9.4, p);
+      lookX = THREE.MathUtils.lerp(0.6, -0.5, p);
+      lookY = THREE.MathUtils.lerp(-0.2, -1.3, p);
+    } else {
+      const p = (sp - 0.66) / 0.34;
+      camX = THREE.MathUtils.lerp(-2.2, 0.4, p);
+      camY = THREE.MathUtils.lerp(-2.6, -4.0, p);
+      camZ = THREE.MathUtils.lerp(9.4, 10.6, p);
+      lookX = THREE.MathUtils.lerp(-0.5, 0, p);
+      lookY = THREE.MathUtils.lerp(-1.3, -2.0, p);
+    }
+
+    // Parallax mouse + subtle breathing drift
     const mx = mouse.current.x * parallaxStrength;
-    const my = mouse.current.y * parallaxStrength * 0.5;
+    const my = mouse.current.y * parallaxStrength * 0.45;
+    const driftX = Math.sin(t * driftSpeed) * 0.35;
+    const driftY = Math.cos(t * driftSpeed * 0.8) * 0.2;
 
-    // Scroll depth effect (transitioning camera downward & slightly back)
-    const scrollFactor = scroll?.current || 0;
-    const scrollYOffset = scrollFactor * -3.2;
-    const scrollZOffset = scrollFactor * 1.5;
-
-    targetPos.current.set(baseDriftX + mx, baseDriftY + my + scrollYOffset, 10 + scrollZOffset);
-    currentPos.current.lerp(targetPos.current, 0.03);
+    const targetPos = new THREE.Vector3(camX + mx + driftX, camY + my + driftY, camZ);
+    currentPos.current.lerp(targetPos, Math.min(1, delta * 3.5));
     camera.position.copy(currentPos.current);
-    camera.lookAt(0, scrollYOffset * 0.6, -2);
+
+    const targetLook = new THREE.Vector3(lookX, lookY, -2);
+    lookTarget.current.lerp(targetLook, Math.min(1, delta * 3.5));
+    camera.lookAt(lookTarget.current);
   });
 
   return null;
@@ -686,6 +768,34 @@ function VisibilityPause() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// WORLD CONTAINER – continuous 3D orbital rotation and depth glide on scroll
+// ═══════════════════════════════════════════════════════════════════════════════
+function WorldContainer({ scroll, mouse, children }) {
+  const groupRef = useRef();
+  const smoothScroll = useRef(0);
+
+  useFrame((state, delta) => {
+    if (!groupRef.current) return;
+    const targetScroll = scroll?.current?.target ?? 0;
+    smoothScroll.current += (targetScroll - smoothScroll.current) * Math.min(1, delta * 4.5);
+    const sp = smoothScroll.current;
+    const t = state.clock.elapsedTime;
+
+    // Dramatic continuous 3D rotation with scroll (orbits ~200 deg as you scroll):
+    groupRef.current.rotation.y = sp * (Math.PI * 1.35) + t * 0.04;
+
+    // Isometric pitch/tilt on scroll:
+    groupRef.current.rotation.x = Math.sin(sp * Math.PI) * 0.38 + mouse.current.y * 0.06;
+
+    // Scroll parallax translation: pulls the whole world dynamically
+    groupRef.current.position.y = (sp - 0.2) * 3.8;
+    groupRef.current.position.z = Math.sin(sp * Math.PI) * 2.2;
+  });
+
+  return <group ref={groupRef}>{children}</group>;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // SCENE (assembles everything inside Canvas)
 // ═══════════════════════════════════════════════════════════════════════════════
 function Scene({ mouse, scroll, reducedMotion, isMobile }) {
@@ -694,44 +804,47 @@ function Scene({ mouse, scroll, reducedMotion, isMobile }) {
       {/* Background color */}
       <color attach="background" args={['#060810']} />
 
-      {/* Atmospheric fog */}
-      <fog attach="fog" args={['#060810', 8, 26]} />
+      {/* Distant fog that doesn't wash out foreground objects */}
+      <fog attach="fog" args={['#060810', 30, 75]} />
 
-      {/* Lighting */}
-      <NetworkBreathing reducedMotion={reducedMotion} />
-      <directionalLight position={[5, 5, 5]} intensity={0.35} color="#8ab4f8" />
-      <directionalLight position={[-5, 3, 3]} intensity={0.2} color="#a78bfa" />
-      <pointLight position={[0, 0, 6]} intensity={0.15} color="#22d3ee" distance={15} decay={2} />
+      {/* Vibrant scene lighting */}
+      <ambientLight intensity={0.6} color="#c7d2fe" />
+      <directionalLight position={[6, 8, 7]} intensity={1.2} color="#5DCAA5" />
+      <directionalLight position={[-6, 5, 4]} intensity={0.8} color="#a78bfa" />
+      <pointLight position={[0, 0, 4]} intensity={4.0} color="#22d3ee" distance={20} decay={2} />
 
-      {/* Central database */}
-      <CentralDatabase reducedMotion={reducedMotion} isMobile={isMobile} />
+      {/* Entire 3D constellation dynamically rotating and transforming with scroll */}
+      <WorldContainer scroll={scroll} mouse={mouse}>
+        {/* Central database */}
+        <CentralDatabase reducedMotion={reducedMotion} isMobile={isMobile} scroll={scroll} />
 
-      {/* Schema group nodes */}
-      <SchemaGroupNodes reducedMotion={reducedMotion} />
+        {/* Schema group nodes */}
+        <SchemaGroupNodes reducedMotion={reducedMotion} scroll={scroll} />
 
-      {/* Dependency edges + flowing particles */}
-      <DependencyEdges reducedMotion={reducedMotion} />
+        {/* Dependency edges + flowing particles */}
+        <DependencyEdges reducedMotion={reducedMotion} scroll={scroll} />
 
-      {/* Pulsing highlights on edges */}
-      <PulsingHighlights reducedMotion={reducedMotion} />
+        {/* Pulsing highlights on edges */}
+        <PulsingHighlights reducedMotion={reducedMotion} />
 
-      {/* Scattered network nodes */}
-      <NetworkNodes reducedMotion={reducedMotion} isMobile={isMobile} />
+        {/* Scattered network nodes */}
+        <NetworkNodes reducedMotion={reducedMotion} isMobile={isMobile} />
 
-      {/* Ambient particles */}
-      <AmbientParticles reducedMotion={reducedMotion} isMobile={isMobile} />
+        {/* Ambient particles */}
+        <AmbientParticles reducedMotion={reducedMotion} isMobile={isMobile} />
 
-      {/* Holographic panels */}
-      <HolographicPanels reducedMotion={reducedMotion} />
+        {/* Holographic panels */}
+        <HolographicPanels reducedMotion={reducedMotion} />
 
-      {/* Floating mini databases */}
-      <FloatingMiniDatabases reducedMotion={reducedMotion} />
+        {/* Floating mini databases */}
+        <FloatingMiniDatabases reducedMotion={reducedMotion} />
 
-      {/* Reflective grid floor */}
-      <GridFloor />
+        {/* Reflective grid floor */}
+        <GridFloor />
 
-      {/* Decomposition sequence */}
-      <DecompositionSequence reducedMotion={reducedMotion} />
+        {/* Decomposition sequence */}
+        <DecompositionSequence reducedMotion={reducedMotion} />
+      </WorldContainer>
 
       {/* Camera controller */}
       <CameraController mouse={mouse} scroll={scroll} reducedMotion={reducedMotion} />
@@ -805,12 +918,12 @@ export default function Background3D() {
       >
         <Scene mouse={mouse} scroll={scroll} reducedMotion={reducedMotion} isMobile={isMobile} />
       </Canvas>
-      {/* Subtle ambient fade overlay to keep background non-intrusive and foreground content crisp */}
+      {/* Ultra-subtle edge vignette to ensure 3D scene shines through with brilliance */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'radial-gradient(circle at 50% 45%, rgba(6, 8, 16, 0.3) 0%, rgba(6, 8, 16, 0.65) 100%)',
+          background: 'radial-gradient(circle at 50% 50%, transparent 65%, rgba(6, 8, 16, 0.4) 100%)',
           pointerEvents: 'none',
         }}
       />
