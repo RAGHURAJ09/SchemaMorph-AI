@@ -132,7 +132,7 @@ export default function Upload() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-900 bg-grid relative overflow-hidden">
+    <div className="min-h-full bg-transparent bg-grid relative overflow-hidden">
       {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-600/10 rounded-full blur-3xl" />

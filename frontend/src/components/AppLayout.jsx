@@ -1,4 +1,5 @@
 import Navbar from './Navbar'
+import Background3D from './Background3D'
 
 export default function AppLayout({ children }) {
   return (
@@ -6,24 +7,23 @@ export default function AppLayout({ children }) {
       display: 'flex', 
       flexDirection: 'column',
       minHeight: '100vh', 
-      background: '#090C12',
-      // Subtle animated grid background
-      backgroundImage: `
-        linear-gradient(rgba(29,158,117,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(29,158,117,0.03) 1px, transparent 1px)
-      `,
-      backgroundSize: '40px 40px',
+      background: '#060810',
       position: 'relative'
     }}>
+      {/* 3D Background behind all content */}
+      <Background3D />
+
       <Navbar />
 
-      {/* Main area - added top padding to account for the floating navbar */}
+      {/* Main area - sits above the 3D background */}
       <main style={{ 
         flex: 1, 
         overflow: 'auto', 
-        paddingTop: 100, // Space for the navbar
+        paddingTop: 100,
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        position: 'relative',
+        zIndex: 1,
       }}>
         {children}
       </main>

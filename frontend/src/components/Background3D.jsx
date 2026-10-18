@@ -123,7 +123,7 @@ function CentralDatabase({ reducedMotion, isMobile }) {
               metalness={0.85}
               roughness={0.2}
               emissive="#1D9E75"
-              emissiveIntensity={0.08 + (i === 2 ? 0.12 : 0)}
+              emissiveIntensity={0.12 + (i === 2 ? 0.12 : 0)}
               transparent
               opacity={0.92}
             />
@@ -148,7 +148,7 @@ function CentralDatabase({ reducedMotion, isMobile }) {
           ref={(el) => (ringsRef.current[i] = el)}
           geometry={scanRingGeo}
         >
-          <meshBasicMaterial color={i === 0 ? '#22d3ee' : '#a78bfa'} transparent opacity={0.5} />
+          <meshBasicMaterial color={i === 0 ? '#22d3ee' : '#a78bfa'} transparent opacity={0.45} />
         </mesh>
       ))}
 
@@ -226,11 +226,11 @@ function NetworkNodes({ reducedMotion, isMobile }) {
       <sphereGeometry args={[0.06, 8, 8]} />
       <meshStandardMaterial
         emissive="#1D9E75"
-        emissiveIntensity={0.4}
+        emissiveIntensity={0.45}
         metalness={0.5}
         roughness={0.5}
         transparent
-        opacity={0.85}
+        opacity={0.88}
       />
     </instancedMesh>
   );
@@ -272,7 +272,7 @@ function DependencyEdges({ reducedMotion }) {
           <bufferAttribute attach="attributes-position" args={[positions, 3]} />
           <bufferAttribute attach="attributes-color" args={[colors, 3]} />
         </bufferGeometry>
-        <lineBasicMaterial vertexColors transparent opacity={0.2} />
+        <lineBasicMaterial vertexColors transparent opacity={0.25} />
       </lineSegments>
       {/* Flowing particles on edges */}
       {!reducedMotion && edgeMeta.map((edge, i) => (
@@ -322,7 +322,7 @@ function SchemaGroupNodes({ reducedMotion }) {
           {/* Outer glow sphere */}
           <mesh>
             <sphereGeometry args={[0.35, 16, 16]} />
-            <meshBasicMaterial color={group.color} transparent opacity={0.06} />
+            <meshBasicMaterial color={group.color} transparent opacity={0.08} />
           </mesh>
           {/* Core node */}
           <mesh ref={(el) => (refs.current[i] = el)}>
@@ -330,15 +330,15 @@ function SchemaGroupNodes({ reducedMotion }) {
             <meshStandardMaterial
               color={group.color}
               emissive={group.color}
-              emissiveIntensity={0.5}
+              emissiveIntensity={0.55}
               metalness={0.6}
               roughness={0.3}
               transparent
-              opacity={0.9}
+              opacity={0.92}
             />
           </mesh>
           {/* Point light */}
-          <pointLight color={group.color} intensity={0.8} distance={4} decay={2} />
+          <pointLight color={group.color} intensity={0.9} distance={5} decay={2} />
         </group>
       ))}
     </group>
@@ -385,10 +385,10 @@ function HolographicPanels({ reducedMotion }) {
           <meshStandardMaterial
             color={pd.color}
             transparent
-            opacity={0.04}
+            opacity={0.05}
             side={THREE.DoubleSide}
             emissive={pd.color}
-            emissiveIntensity={0.15}
+            emissiveIntensity={0.18}
             metalness={0.3}
             roughness={0.8}
           />
@@ -431,12 +431,12 @@ function FloatingMiniDatabases({ reducedMotion }) {
         <group key={i} ref={(el) => (refs.current[i] = el)} position={md.pos}>
           {/* Two stacked mini disks */}
           <mesh position={[0, 0.08, 0]} geometry={miniGeo}>
-            <meshStandardMaterial color="#0a1628" metalness={0.8} roughness={0.25} emissive={md.color} emissiveIntensity={0.12} transparent opacity={0.8} />
+            <meshStandardMaterial color="#0a1628" metalness={0.8} roughness={0.25} emissive={md.color} emissiveIntensity={0.15} transparent opacity={0.82} />
           </mesh>
           <mesh position={[0, -0.08, 0]} geometry={miniGeo}>
-            <meshStandardMaterial color="#0a1628" metalness={0.8} roughness={0.25} emissive={md.color} emissiveIntensity={0.08} transparent opacity={0.8} />
+            <meshStandardMaterial color="#0a1628" metalness={0.8} roughness={0.25} emissive={md.color} emissiveIntensity={0.10} transparent opacity={0.82} />
           </mesh>
-          <pointLight color={md.color} intensity={0.3} distance={3} decay={2} />
+          <pointLight color={md.color} intensity={0.35} distance={3.5} decay={2} />
         </group>
       ))}
     </group>
@@ -490,7 +490,7 @@ function AmbientParticles({ reducedMotion, isMobile }) {
   return (
     <instancedMesh ref={meshRef} args={[null, null, count]} frustumCulled={false}>
       <sphereGeometry args={[0.02, 4, 4]} />
-      <meshBasicMaterial color="#22d3ee" transparent opacity={0.4} />
+      <meshBasicMaterial color="#22d3ee" transparent opacity={0.45} />
     </instancedMesh>
   );
 }
@@ -605,10 +605,10 @@ function NetworkBreathing({ reducedMotion }) {
   useFrame((state) => {
     if (!lightRef.current || reducedMotion) return;
     const t = state.clock.elapsedTime;
-    lightRef.current.intensity = 0.15 + Math.sin(t * 0.3) * 0.08;
+    lightRef.current.intensity = 0.2 + Math.sin(t * 0.3) * 0.08;
   });
 
-  return <ambientLight ref={lightRef} intensity={0.15} color="#8ab4f8" />;
+  return <ambientLight ref={lightRef} intensity={0.2} color="#8ab4f8" />;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -657,7 +657,7 @@ function BloomEffect({ isMobile }) {
   return (
     <Effects disableGamma>
       <unrealBloomPass
-        args={[new THREE.Vector2(size.width, size.height), isMobile ? 0.3 : 0.5, 0.4, 0.85]}
+        args={[new THREE.Vector2(size.width, size.height), isMobile ? 0.28 : 0.45, 0.35, 0.82]}
       />
     </Effects>
   );
@@ -695,13 +695,13 @@ function Scene({ mouse, scroll, reducedMotion, isMobile }) {
       <color attach="background" args={['#060810']} />
 
       {/* Atmospheric fog */}
-      <fog attach="fog" args={['#060810', 8, 25]} />
+      <fog attach="fog" args={['#060810', 8, 26]} />
 
       {/* Lighting */}
       <NetworkBreathing reducedMotion={reducedMotion} />
-      <directionalLight position={[5, 5, 5]} intensity={0.3} color="#8ab4f8" />
-      <directionalLight position={[-5, 3, 3]} intensity={0.15} color="#a78bfa" />
-      <pointLight position={[0, 0, 6]} intensity={0.1} color="#22d3ee" distance={15} decay={2} />
+      <directionalLight position={[5, 5, 5]} intensity={0.35} color="#8ab4f8" />
+      <directionalLight position={[-5, 3, 3]} intensity={0.2} color="#a78bfa" />
+      <pointLight position={[0, 0, 6]} intensity={0.15} color="#22d3ee" distance={15} decay={2} />
 
       {/* Central database */}
       <CentralDatabase reducedMotion={reducedMotion} isMobile={isMobile} />
@@ -805,6 +805,15 @@ export default function Background3D() {
       >
         <Scene mouse={mouse} scroll={scroll} reducedMotion={reducedMotion} isMobile={isMobile} />
       </Canvas>
+      {/* Subtle ambient fade overlay to keep background non-intrusive and foreground content crisp */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at 50% 45%, rgba(6, 8, 16, 0.3) 0%, rgba(6, 8, 16, 0.65) 100%)',
+          pointerEvents: 'none',
+        }}
+      />
     </div>
   );
 }
