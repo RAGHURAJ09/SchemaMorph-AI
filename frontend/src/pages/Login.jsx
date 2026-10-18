@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { login } from '../api/client'
 import useAuthStore from '../store/authStore'
 import FloatingNav from '../components/FloatingNav'
+import Background3D from '../components/Background3D'
 
 // Eye icons for show/hide password
 const EyeIcon = () => (
@@ -66,9 +67,10 @@ export default function Login() {
 
 
   return (
-    <div style={{ minHeight:'100vh', background:'radial-gradient(ellipse 60% 40% at 50% 0%,rgba(29,158,117,0.1) 0%,transparent 60%),#090c12', display:'flex', alignItems:'center', justifyContent:'center', padding:'24px', paddingTop:'86px', fontFamily:'Inter,system-ui,sans-serif' }}>
+    <div style={{ minHeight:'100vh', background:'transparent', display:'flex', alignItems:'center', justifyContent:'center', padding:'24px', paddingTop:'86px', fontFamily:'Inter,system-ui,sans-serif', position:'relative' }}>
+      <Background3D speedMultiplier={2} enableScroll={false} />
       <FloatingNav />
-      <div style={{ maxWidth:430, width:'100%', background:'rgba(255,255,255,0.03)', border:'0.5px solid rgba(255,255,255,0.1)', borderRadius:18, padding:'38px 30px', boxSizing:'border-box' }}>
+      <div style={{ maxWidth:430, width:'100%', background:'rgba(9, 13, 24, 0.75)', backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)', border:'0.5px solid rgba(255,255,255,0.12)', borderRadius:18, padding:'38px 30px', boxSizing:'border-box', boxShadow:'0 20px 50px rgba(0, 0, 0, 0.5), 0 0 35px rgba(29, 158, 117, 0.12)', position:'relative', zIndex:1 }}>
         <div style={{ textAlign:'center', marginBottom:28 }}>
           <div style={{ width:40, height:40, borderRadius:10, background:'#1D9E75', display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:700, color:'#fff', fontFamily:'Space Grotesk,sans-serif', marginBottom:14 }}>S</div>
           <h1 style={{ fontFamily:'Space Grotesk,sans-serif', fontSize:24, fontWeight:700, color:'#fff', margin:'0 0 6px' }}>Welcome Back</h1>

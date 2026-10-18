@@ -30,6 +30,10 @@ const PARTICLE_COUNT = 200;
 const sharedSphereGeo = new THREE.SphereGeometry(0.08, 8, 8);
 const sharedSmallSphereGeo = new THREE.SphereGeometry(0.04, 6, 6);
 
+// ── Animation Speed Context ──────────────────────────────────────────────────
+const SpeedContext = React.createContext(1);
+export const useAnimSpeed = () => React.useContext(SpeedContext);
+
 // ── Utility: detect reduced motion preference ───────────────────────────────
 function usePrefersReducedMotion() {
   const [prefersReduced, setPrefersReduced] = useState(false);
@@ -70,9 +74,13 @@ function useMousePosition() {
 }
 
 // ── Scroll tracker (normalized 0..1 with smoothed interpolation & velocity) ──
-function useScrollProgress() {
+function useScrollProgress(enabled = true) {
   const scroll = useRef({ current: 0, target: 0, velocity: 0 });
   useEffect(() => {
+    if (!enabled) {
+      scroll.current = { current: 0, target: 0, velocity: 0 };
+      return;
+    }
     let lastY = window.scrollY;
     let lastTime = performance.now();
     let animId;
@@ -114,18 +122,19 @@ function useScrollProgress() {
       window.removeEventListener('scroll', onScroll, { capture: true });
       cancelAnimationFrame(animId);
     };
-  }, []);
+  }, [enabled]);
   return scroll;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CENTRAL DATABASE CYLINDER
 // ═══════════════════════════════════════════════════════════════════════════════
-function CentralDatabase({ reducedMotion, isMobile, scroll }) {
+function CentralDatabase({ reducedMotion, isMobile, scroll, enableScroll = true }) {
   const groupRef = useRef();
   const ringsRef = useRef([]);
   const diskRefs = useRef([]);
   const diskCount = 5;
+  const speedMultiplier = useAnimSpeed();
 
   const diskGeo = useMemo(() => new THREE.CylinderGeometry(1.2, 1.2, 0.18, 36), []);
   const ringGeo = useMemo(() => new THREE.TorusGeometry(1.7, 0.025, 12, 64), []);
@@ -133,9 +142,9 @@ function CentralDatabase({ reducedMotion, isMobile, scroll }) {
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
-    const t = state.clock.elapsedTime;
-    const sp = scroll?.current?.target ?? 0;
-    const vel = scroll?.current?.velocity ?? 0;
+    const t = state.clock.elapsedTime * speedMultiplier;
+    const sp = enableScroll ? (scroll?.current?.target ?? 0) : 0;
+    const vel = enableScroll ? (scroll?.current?.velocity ?? 0) : 0;
     const speed = (reducedMotion ? 0.05 : 0.2) + vel * 0.5;
     groupRef.current.rotation.y = t * speed + sp * Math.PI * 0.8;
 
@@ -244,9 +253,11 @@ function NetworkNodes({ reducedMotion, isMobile }) {
     }
   }, [nodeData]);
 
+  const speedMultiplier = useAnimSpeed();
+
   useFrame((state) => {
     if (!meshRef.current) return;
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * speedMultiplier;
     const speedMult = reducedMotion ? 0.2 : 1;
 
     nodeData.forEach((node, i) => {
@@ -282,7 +293,7 @@ function NetworkNodes({ reducedMotion, isMobile }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // DEPENDENCY EDGES – lines connecting schema groups with flowing particles
 // ═══════════════════════════════════════════════════════════════════════════════
-function DependencyEdges({ reducedMotion, scroll }) {
+function DependencyEdges({ reducedMotion, scroll, enableScroll = true }) {
   const linesRef = useRef();
 
   // Build line segment positions
@@ -318,18 +329,19 @@ function DependencyEdges({ reducedMotion, scroll }) {
       </lineSegments>
       {/* Flowing particles on edges */}
       {!reducedMotion && edgeMeta.map((edge, i) => (
-        <EdgeParticle key={i} from={edge.from} to={edge.to} index={i} scroll={scroll} />
+        <EdgeParticle key={i} from={edge.from} to={edge.to} index={i} scroll={scroll} enableScroll={enableScroll} />
       ))}
     </group>
   );
 }
 
-function EdgeParticle({ from, to, index, scroll }) {
+function EdgeParticle({ from, to, index, scroll, enableScroll = true }) {
   const ref = useRef();
+  const speedMultiplier = useAnimSpeed();
   useFrame((state) => {
     if (!ref.current) return;
-    const t = state.clock.elapsedTime;
-    const vel = scroll?.current?.velocity ?? 0;
+    const t = state.clock.elapsedTime * speedMultiplier;
+    const vel = enableScroll ? (scroll?.current?.velocity ?? 0) : 0;
     const speedMult = 1 + vel * 2.5;
     const progress = ((t * 0.3 * speedMult + index * 0.37) % 1);
     ref.current.position.lerpVectors(from, to, progress);
@@ -346,13 +358,14 @@ function EdgeParticle({ from, to, index, scroll }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SCHEMA GROUP NODES – larger spheres at group positions with glow
 // ═══════════════════════════════════════════════════════════════════════════════
-function SchemaGroupNodes({ reducedMotion, scroll }) {
+function SchemaGroupNodes({ reducedMotion, scroll, enableScroll = true }) {
   const groupsRef = useRef([]);
+  const speedMultiplier = useAnimSpeed();
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * speedMultiplier;
     const speed = reducedMotion ? 0.15 : 0.4;
-    const sp = scroll?.current?.target ?? 0;
+    const sp = enableScroll ? (scroll?.current?.target ?? 0) : 0;
     // As user scrolls, the schema clusters spread outward (visualizing decomposition into microservices!)
     const expansion = 1 + sp * 1.25;
 
@@ -400,6 +413,7 @@ function SchemaGroupNodes({ reducedMotion, scroll }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function HolographicPanels({ reducedMotion }) {
   const panelsRef = useRef([]);
+  const speedMultiplier = useAnimSpeed();
 
   const panelData = useMemo(() => [
     { pos: [-5.5, 3.0, -4], rot: [0.1, 0.3, 0.02], color: '#1D9E75', scale: [1.4, 0.9, 1] },
@@ -410,7 +424,7 @@ function HolographicPanels({ reducedMotion }) {
   ], []);
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * speedMultiplier;
     const speed = reducedMotion ? 0.1 : 0.25;
     panelsRef.current.forEach((panel, i) => {
       if (!panel) return;
@@ -454,6 +468,7 @@ function HolographicPanels({ reducedMotion }) {
 function FloatingMiniDatabases({ reducedMotion }) {
   const refs = useRef([]);
   const miniGeo = useMemo(() => new THREE.CylinderGeometry(0.25, 0.25, 0.12, 16), []);
+  const speedMultiplier = useAnimSpeed();
 
   const miniData = useMemo(() => [
     { pos: [-6, 1.5, -3], color: '#534AB7' },
@@ -465,7 +480,7 @@ function FloatingMiniDatabases({ reducedMotion }) {
   ], []);
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * speedMultiplier;
     const speed = reducedMotion ? 0.08 : 0.2;
     refs.current.forEach((mesh, i) => {
       if (!mesh) return;
@@ -499,6 +514,7 @@ function FloatingMiniDatabases({ reducedMotion }) {
 function AmbientParticles({ reducedMotion, isMobile }) {
   const meshRef = useRef();
   const count = isMobile ? 80 : PARTICLE_COUNT;
+  const speedMultiplier = useAnimSpeed();
 
   const particleData = useMemo(() => {
     const data = [];
@@ -520,7 +536,7 @@ function AmbientParticles({ reducedMotion, isMobile }) {
 
   useFrame((state) => {
     if (!meshRef.current) return;
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * speedMultiplier;
     const speedMult = reducedMotion ? 0.3 : 1;
 
     particleData.forEach((p, i) => {
@@ -572,10 +588,11 @@ function GridFloor() {
 // ═══════════════════════════════════════════════════════════════════════════════
 function PulsingHighlights({ reducedMotion }) {
   const meshRefs = useRef([]);
+  const speedMultiplier = useAnimSpeed();
 
   useFrame((state) => {
     if (reducedMotion) return;
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * speedMultiplier;
     meshRefs.current.forEach((mesh, i) => {
       if (!mesh) return;
       // Sequentially illuminate edges
@@ -614,50 +631,53 @@ function PulsingHighlights({ reducedMotion }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // CAMERA CONTROLLER – cinematic multi-phase trajectory + mouse parallax + scroll
 // ═══════════════════════════════════════════════════════════════════════════════
-function CameraController({ mouse, scroll, reducedMotion }) {
+function CameraController({ mouse, scroll, reducedMotion, enableScroll = true }) {
   const { camera } = useThree();
   const currentPos = useRef(new THREE.Vector3(0, 0, 10));
   const lookTarget = useRef(new THREE.Vector3(0, 0, -2));
   const smoothScroll = useRef(0);
+  const speedMultiplier = useAnimSpeed();
 
   useFrame((state, delta) => {
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * speedMultiplier;
     const driftSpeed = reducedMotion ? 0.02 : 0.05;
     const parallaxStrength = reducedMotion ? 0.15 : 0.65;
 
-    // Smoothly interpolate scroll target
-    const targetScroll = scroll?.current?.target ?? 0;
-    smoothScroll.current += (targetScroll - smoothScroll.current) * Math.min(1, delta * 4.5);
-    const sp = smoothScroll.current;
-
-    // Multi-waypoint cinematic curve based on page scroll:
     let camX = 0;
     let camY = 0;
     let camZ = 10;
     let lookX = 0;
     let lookY = 0;
 
-    if (sp < 0.33) {
-      const p = sp / 0.33;
-      camX = THREE.MathUtils.lerp(0, 2.0, p);
-      camY = THREE.MathUtils.lerp(0, -1.0, p);
-      camZ = THREE.MathUtils.lerp(10, 8.8, p);
-      lookX = THREE.MathUtils.lerp(0, 0.6, p);
-      lookY = THREE.MathUtils.lerp(0.2, -0.2, p);
-    } else if (sp < 0.66) {
-      const p = (sp - 0.33) / 0.33;
-      camX = THREE.MathUtils.lerp(2.0, -2.2, p);
-      camY = THREE.MathUtils.lerp(-1.0, -2.6, p);
-      camZ = THREE.MathUtils.lerp(8.8, 9.4, p);
-      lookX = THREE.MathUtils.lerp(0.6, -0.5, p);
-      lookY = THREE.MathUtils.lerp(-0.2, -1.3, p);
-    } else {
-      const p = (sp - 0.66) / 0.34;
-      camX = THREE.MathUtils.lerp(-2.2, 0.4, p);
-      camY = THREE.MathUtils.lerp(-2.6, -4.0, p);
-      camZ = THREE.MathUtils.lerp(9.4, 10.6, p);
-      lookX = THREE.MathUtils.lerp(-0.5, 0, p);
-      lookY = THREE.MathUtils.lerp(-1.3, -2.0, p);
+    if (enableScroll) {
+      // Smoothly interpolate scroll target
+      const targetScroll = scroll?.current?.target ?? 0;
+      smoothScroll.current += (targetScroll - smoothScroll.current) * Math.min(1, delta * 4.5);
+      const sp = smoothScroll.current;
+
+      // Multi-waypoint cinematic curve based on page scroll:
+      if (sp < 0.33) {
+        const p = sp / 0.33;
+        camX = THREE.MathUtils.lerp(0, 2.0, p);
+        camY = THREE.MathUtils.lerp(0, -1.0, p);
+        camZ = THREE.MathUtils.lerp(10, 8.8, p);
+        lookX = THREE.MathUtils.lerp(0, 0.6, p);
+        lookY = THREE.MathUtils.lerp(0.2, -0.2, p);
+      } else if (sp < 0.66) {
+        const p = (sp - 0.33) / 0.33;
+        camX = THREE.MathUtils.lerp(2.0, -2.2, p);
+        camY = THREE.MathUtils.lerp(-1.0, -2.6, p);
+        camZ = THREE.MathUtils.lerp(8.8, 9.4, p);
+        lookX = THREE.MathUtils.lerp(0.6, -0.5, p);
+        lookY = THREE.MathUtils.lerp(-0.2, -1.3, p);
+      } else {
+        const p = (sp - 0.66) / 0.34;
+        camX = THREE.MathUtils.lerp(-2.2, 0.4, p);
+        camY = THREE.MathUtils.lerp(-2.6, -4.0, p);
+        camZ = THREE.MathUtils.lerp(9.4, 10.6, p);
+        lookX = THREE.MathUtils.lerp(-0.5, 0, p);
+        lookY = THREE.MathUtils.lerp(-1.3, -2.0, p);
+      }
     }
 
     // Parallax mouse + subtle breathing drift
@@ -667,11 +687,11 @@ function CameraController({ mouse, scroll, reducedMotion }) {
     const driftY = Math.cos(t * driftSpeed * 0.8) * 0.2;
 
     const targetPos = new THREE.Vector3(camX + mx + driftX, camY + my + driftY, camZ);
-    currentPos.current.lerp(targetPos, Math.min(1, delta * 3.5));
+    currentPos.current.lerp(targetPos, Math.min(1, delta * 3.5 * speedMultiplier));
     camera.position.copy(currentPos.current);
 
     const targetLook = new THREE.Vector3(lookX, lookY, -2);
-    lookTarget.current.lerp(targetLook, Math.min(1, delta * 3.5));
+    lookTarget.current.lerp(targetLook, Math.min(1, delta * 3.5 * speedMultiplier));
     camera.lookAt(lookTarget.current);
   });
 
@@ -683,10 +703,11 @@ function CameraController({ mouse, scroll, reducedMotion }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function NetworkBreathing({ reducedMotion }) {
   const lightRef = useRef();
+  const speedMultiplier = useAnimSpeed();
 
   useFrame((state) => {
     if (!lightRef.current || reducedMotion) return;
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * speedMultiplier;
     lightRef.current.intensity = 0.2 + Math.sin(t * 0.3) * 0.08;
   });
 
@@ -698,10 +719,11 @@ function NetworkBreathing({ reducedMotion }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function DecompositionSequence({ reducedMotion }) {
   const groupsRef = useRef([]);
+  const speedMultiplier = useAnimSpeed();
 
   useFrame((state) => {
     if (reducedMotion) return;
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * speedMultiplier;
     // Every ~20 seconds, clusters spread apart then recombine
     const cycle = t % 20;
     const spread = cycle > 14 && cycle < 18
@@ -770,26 +792,36 @@ function VisibilityPause() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // WORLD CONTAINER – continuous 3D orbital rotation and depth glide on scroll
 // ═══════════════════════════════════════════════════════════════════════════════
-function WorldContainer({ scroll, mouse, children }) {
+function WorldContainer({ scroll, mouse, enableScroll = true, children }) {
   const groupRef = useRef();
   const smoothScroll = useRef(0);
+  const speedMultiplier = useAnimSpeed();
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
-    const targetScroll = scroll?.current?.target ?? 0;
-    smoothScroll.current += (targetScroll - smoothScroll.current) * Math.min(1, delta * 4.5);
-    const sp = smoothScroll.current;
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * speedMultiplier;
 
-    // Dramatic continuous 3D rotation with scroll (orbits ~200 deg as you scroll):
-    groupRef.current.rotation.y = sp * (Math.PI * 1.35) + t * 0.04;
+    if (enableScroll) {
+      const targetScroll = scroll?.current?.target ?? 0;
+      smoothScroll.current += (targetScroll - smoothScroll.current) * Math.min(1, delta * 4.5);
+      const sp = smoothScroll.current;
 
-    // Isometric pitch/tilt on scroll:
-    groupRef.current.rotation.x = Math.sin(sp * Math.PI) * 0.38 + mouse.current.y * 0.06;
+      // Dramatic continuous 3D rotation with scroll (orbits ~200 deg as you scroll):
+      groupRef.current.rotation.y = sp * (Math.PI * 1.35) + t * 0.04;
 
-    // Scroll parallax translation: pulls the whole world dynamically
-    groupRef.current.position.y = (sp - 0.2) * 3.8;
-    groupRef.current.position.z = Math.sin(sp * Math.PI) * 2.2;
+      // Isometric pitch/tilt on scroll:
+      groupRef.current.rotation.x = Math.sin(sp * Math.PI) * 0.38 + mouse.current.y * 0.06;
+
+      // Scroll parallax translation: pulls the whole world dynamically
+      groupRef.current.position.y = (sp - 0.2) * 3.8;
+      groupRef.current.position.z = Math.sin(sp * Math.PI) * 2.2;
+    } else {
+      // In static non-scrolling mode: smooth autonomous continuous 3D rotation
+      groupRef.current.rotation.y = t * 0.08;
+      groupRef.current.rotation.x = mouse.current.y * 0.06;
+      groupRef.current.position.y = 0;
+      groupRef.current.position.z = 0;
+    }
   });
 
   return <group ref={groupRef}>{children}</group>;
@@ -798,7 +830,7 @@ function WorldContainer({ scroll, mouse, children }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SCENE (assembles everything inside Canvas)
 // ═══════════════════════════════════════════════════════════════════════════════
-function Scene({ mouse, scroll, reducedMotion, isMobile }) {
+function Scene({ mouse, scroll, reducedMotion, isMobile, enableScroll = true }) {
   return (
     <>
       {/* Background color */}
@@ -813,16 +845,16 @@ function Scene({ mouse, scroll, reducedMotion, isMobile }) {
       <directionalLight position={[-6, 5, 4]} intensity={0.8} color="#a78bfa" />
       <pointLight position={[0, 0, 4]} intensity={4.0} color="#22d3ee" distance={20} decay={2} />
 
-      {/* Entire 3D constellation dynamically rotating and transforming with scroll */}
-      <WorldContainer scroll={scroll} mouse={mouse}>
+      {/* Entire 3D constellation dynamically rotating and transforming */}
+      <WorldContainer scroll={scroll} mouse={mouse} enableScroll={enableScroll}>
         {/* Central database */}
-        <CentralDatabase reducedMotion={reducedMotion} isMobile={isMobile} scroll={scroll} />
+        <CentralDatabase reducedMotion={reducedMotion} isMobile={isMobile} scroll={scroll} enableScroll={enableScroll} />
 
         {/* Schema group nodes */}
-        <SchemaGroupNodes reducedMotion={reducedMotion} scroll={scroll} />
+        <SchemaGroupNodes reducedMotion={reducedMotion} scroll={scroll} enableScroll={enableScroll} />
 
         {/* Dependency edges + flowing particles */}
-        <DependencyEdges reducedMotion={reducedMotion} scroll={scroll} />
+        <DependencyEdges reducedMotion={reducedMotion} scroll={scroll} enableScroll={enableScroll} />
 
         {/* Pulsing highlights on edges */}
         <PulsingHighlights reducedMotion={reducedMotion} />
@@ -847,7 +879,7 @@ function Scene({ mouse, scroll, reducedMotion, isMobile }) {
       </WorldContainer>
 
       {/* Camera controller */}
-      <CameraController mouse={mouse} scroll={scroll} reducedMotion={reducedMotion} />
+      <CameraController mouse={mouse} scroll={scroll} reducedMotion={reducedMotion} enableScroll={enableScroll} />
 
       {/* Bloom post-processing */}
       {!isMobile && <BloomEffect isMobile={isMobile} />}
@@ -871,9 +903,9 @@ function WebGLFallback() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════
-export default function Background3D() {
+export default function Background3D({ speedMultiplier = 1, enableScroll = true }) {
   const mouse = useMousePosition();
-  const scroll = useScrollProgress();
+  const scroll = useScrollProgress(enableScroll);
   const reducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
   const [webGLSupported, setWebGLSupported] = useState(true);
@@ -916,7 +948,9 @@ export default function Background3D() {
         style={{ width: '100%', height: '100%' }}
         frameloop="always"
       >
-        <Scene mouse={mouse} scroll={scroll} reducedMotion={reducedMotion} isMobile={isMobile} />
+        <SpeedContext.Provider value={speedMultiplier}>
+          <Scene mouse={mouse} scroll={scroll} reducedMotion={reducedMotion} isMobile={isMobile} enableScroll={enableScroll} />
+        </SpeedContext.Provider>
       </Canvas>
       {/* Ultra-subtle edge vignette to ensure 3D scene shines through with brilliance */}
       <div
