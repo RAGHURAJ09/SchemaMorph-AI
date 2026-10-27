@@ -140,7 +140,7 @@ export default function Upload() {
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
-        {/* Header */}
+          {/* Header */}
         <div className="text-center mb-14 animate-fade-in">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand-500/30 bg-brand-500/10 text-brand-400 text-xs font-semibold tracking-widest uppercase mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse-slow" />
@@ -150,7 +150,7 @@ export default function Upload() {
             <span className="gradient-text">SchemaMorph</span>
             <span className="text-white"> AI</span>
           </h1>
-          <p className="text-surface-400 text-lg max-w-xl mx-auto leading-relaxed">
+          <p className="text-slate-300 text-lg max-w-xl mx-auto leading-relaxed">
             Analyze monolithic PostgreSQL schemas and discover natural microservice boundaries — powered by graph analysis and AI.
           </p>
         </div>
@@ -160,7 +160,7 @@ export default function Upload() {
 
           {/* Demo schema quick-load bar */}
           <div className="mb-8 p-4 rounded-xl border border-surface-700 bg-surface-800/50">
-            <p className="text-xs font-semibold text-surface-500 uppercase tracking-widest mb-3">
+            <p className="text-xs font-semibold text-brand-300 uppercase tracking-widest mb-3">
               ⚡ Try a Demo Schema — powered by public APIs
             </p>
             <div className="flex flex-wrap gap-2">
@@ -182,7 +182,7 @@ export default function Upload() {
               ))}
             </div>
             {activeDemoId && (
-              <p className="text-xs text-surface-500 mt-2">
+              <p className="text-xs text-slate-300 mt-2">
                 {DEMO_SCHEMAS.find(d => d.id === activeDemoId)?.description}
               </p>
             )}
@@ -225,7 +225,7 @@ export default function Upload() {
                 placeholder={SAMPLE_SCHEMA}
                 rows={12}
                 className="w-full bg-surface-800 border border-surface-600 rounded-lg px-4 py-3
-                           font-mono text-xs text-surface-300 placeholder-surface-400
+                           font-mono text-xs text-slate-200 placeholder-slate-400
                            focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30
                            resize-y transition-all"
               />
@@ -249,13 +249,13 @@ export default function Upload() {
                   <div>
                     <div className="text-4xl mb-3">📄</div>
                     <p className="text-brand-400 font-semibold">{schemaFile.name}</p>
-                    <p className="text-surface-500 text-xs mt-1">{(schemaFile.size / 1024).toFixed(1)} KB</p>
+                    <p className="text-slate-300 text-xs mt-1">{(schemaFile.size / 1024).toFixed(1)} KB</p>
                   </div>
                 ) : (
                   <div>
                     <div className="text-4xl mb-3">📂</div>
                     <p className="text-surface-300 font-medium">Drop your .sql file here</p>
-                    <p className="text-surface-500 text-xs mt-1">or click to browse</p>
+                    <p className="text-slate-400 text-xs mt-1">or click to browse</p>
                   </div>
                 )}
               </div>
@@ -266,9 +266,9 @@ export default function Upload() {
           <div className="mb-8">
             <label className="text-sm font-semibold text-white block mb-1">
               SQL Queries{' '}
-              <span className="text-surface-500 font-normal">(optional — separate with semicolons)</span>
+              <span className="text-slate-300 font-normal ml-1">(optional — separate with semicolons)</span>
             </label>
-            <p className="text-xs text-surface-500 mb-3">
+            <p className="text-xs text-slate-300 mb-3">
               Queries that JOIN tables across service boundaries will be flagged as broken.
             </p>
             <textarea
@@ -277,7 +277,7 @@ export default function Upload() {
               placeholder={SAMPLE_QUERIES}
               rows={8}
               className="w-full bg-surface-800 border border-surface-600 rounded-lg px-4 py-3
-                         font-mono text-xs text-surface-300 placeholder-surface-400
+                         font-mono text-xs text-slate-200 placeholder-slate-400
                          focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30
                          resize-y transition-all"
             />

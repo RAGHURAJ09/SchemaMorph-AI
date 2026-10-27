@@ -12,7 +12,7 @@ import ValidationBadge from '../components/ValidationBadge'
 function DashStatCard({ label, value, icon, sub, color = '#1D9E75', glow = false }) {
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.03)',
+      background: 'rgba(15,15,22,0.85)',
       border: `1px solid ${color}22`,
       borderRadius: 14, padding: '18px 22px',
       display: 'flex', alignItems: 'center', gap: 16,
@@ -35,7 +35,7 @@ function DashStatCard({ label, value, icon, sub, color = '#1D9E75', glow = false
           fontSize: 26, fontWeight: 800, color: '#fff',
           fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1,
         }}>{value}</div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 4, fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4, fontFamily: 'Inter, sans-serif' }}>
           {label}
         </div>
         {sub && (
@@ -72,7 +72,7 @@ export default function Dashboard() {
           <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: 'Space Grotesk, sans-serif' }}>
             Session Not Found
           </h2>
-          <p style={{ margin: '0 0 24px', fontSize: 14, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif' }}>
+          <p style={{ margin: '0 0 24px', fontSize: 14, color: 'rgba(255,255,255,0.65)', fontFamily: 'Inter, sans-serif' }}>
             Session <code style={{ color: '#1D9E75' }}>{sessionId}</code> may have expired.
           </p>
           <button
@@ -152,12 +152,12 @@ export default function Dashboard() {
               border: 'none',
               borderBottom: `2px solid ${activeTab === tab.id ? '#1D9E75' : 'transparent'}`,
               background: 'none',
-              color: activeTab === tab.id ? '#1D9E75' : 'rgba(255,255,255,0.4)',
+              color: activeTab === tab.id ? '#1D9E75' : 'rgba(255,255,255,0.65)',
               cursor: 'pointer', transition: 'all 0.2s',
               marginBottom: -1, whiteSpace: 'nowrap',
             }}
             onMouseEnter={e => { if (activeTab !== tab.id) e.currentTarget.style.color = 'rgba(255,255,255,0.7)' }}
-            onMouseLeave={e => { if (activeTab !== tab.id) e.currentTarget.style.color = 'rgba(255,255,255,0.4)' }}
+            onMouseLeave={e => { if (activeTab !== tab.id) e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
           >
             {tab.label}
           </button>
@@ -244,7 +244,7 @@ function MonolithSidebar({ tableCount, fkCount, serviceCount }) {
               fontFamily: 'Space Grotesk',
             }}>{item.title}</span>
           </div>
-          <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, fontFamily: 'Inter' }}>
+          <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.6, fontFamily: 'Inter' }}>
             {item.desc}
           </p>
         </div>
@@ -349,7 +349,7 @@ function CrossServiceFKPanel({ fks }) {
 
           {/* Strategies header */}
           <p style={{
-            fontSize: 11, color: 'rgba(255,255,255,0.4)',
+            fontSize: 11, color: 'rgba(255,255,255,0.65)',
             fontFamily: 'Inter', marginBottom: 8, marginLeft: 2,
           }}>
             ✅ This relationship <strong style={{ color: '#fff' }}>CAN be implemented</strong> — choose a strategy:

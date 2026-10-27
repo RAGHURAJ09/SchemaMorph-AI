@@ -10,7 +10,7 @@ export default function AppLayout({ children }) {
       background: '#060810',
       position: 'relative'
     }}>
-      {/* 3D Background behind all content */}
+      {/* 3D Background */}
       <Background3D />
 
       <Navbar />

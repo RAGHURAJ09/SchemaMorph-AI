@@ -6,7 +6,7 @@ export default function ServicePanel({ services, recommendations }) {
 
   return (
     <div className="p-4">
-      <h2 className="text-xs uppercase font-semibold tracking-widest text-surface-500 mb-4">
+      <h2 className="text-xs uppercase font-semibold tracking-widest text-slate-400 mb-4">
         Identified Services
       </h2>
 
@@ -20,21 +20,21 @@ export default function ServicePanel({ services, recommendations }) {
                 style={{ background: colors[i % colors.length] }}
               />
               <span className="text-white text-sm font-semibold">{svc.service_name}</span>
-              <span className="ml-auto text-xs text-surface-500">
+              <span className="ml-auto text-xs text-slate-400">
                 {svc.table_count} table{svc.table_count !== 1 ? 's' : ''}
               </span>
             </div>
 
             {/* Rationale */}
             {svc.rationale && (
-              <p className="text-xs text-surface-400 leading-relaxed mb-3">{svc.rationale}</p>
+              <p className="text-xs text-slate-300 leading-relaxed mb-3">{svc.rationale}</p>
             )}
 
             {/* Responsibilities */}
             {svc.responsibilities?.length > 0 && (
               <ul className="space-y-1 mb-3">
                 {svc.responsibilities.map((r, j) => (
-                  <li key={j} className="text-xs text-surface-400 flex gap-1.5">
+                  <li key={j} className="text-xs text-slate-300 flex gap-1.5">
                     <span className="text-brand-500 shrink-0 mt-0.5">›</span>
                     {r}
                   </li>
@@ -65,12 +65,12 @@ export default function ServicePanel({ services, recommendations }) {
       {/* General Recommendations */}
       {recommendations?.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-xs uppercase font-semibold tracking-widest text-surface-500 mb-3">
+          <h3 className="text-xs uppercase font-semibold tracking-widest text-slate-400 mb-3">
             Recommendations
           </h3>
           <div className="space-y-2">
             {recommendations.filter(Boolean).map((r, i) => (
-              <div key={i} className="text-xs text-surface-400 leading-relaxed p-3 bg-surface-800 rounded-lg border border-surface-700">
+              <div key={i} className="text-xs text-slate-300 leading-relaxed p-3 bg-surface-800 rounded-lg border border-surface-700">
                 💡 {r}
               </div>
             ))}

@@ -37,7 +37,7 @@ export default function QueryDiff({ queries }) {
     <div>
       {/* Filter bar */}
       <div className="flex items-center gap-3 mb-6">
-        <span className="text-xs text-surface-500 font-semibold uppercase tracking-wider">Filter:</span>
+        <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Filter:</span>
         {[
           { id: 'all',    label: `All (${queries.length})` },
           { id: 'broken', label: `⚠ Broken (${brokenCount})`, cls: 'text-red-400' },
@@ -49,7 +49,7 @@ export default function QueryDiff({ queries }) {
             className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
               filter === f.id
                 ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
-                : `text-surface-500 hover:text-white bg-surface-800 border border-surface-700 ${f.cls || ''}`
+                : `text-slate-300 hover:text-white bg-surface-800 border border-surface-700 ${f.cls || ''}`
             }`}
           >
             {f.label}
@@ -58,7 +58,7 @@ export default function QueryDiff({ queries }) {
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-16 text-surface-600">No queries matching this filter.</div>
+        <div className="text-center py-16 text-slate-400">No queries matching this filter.</div>
       )}
 
       <div className="space-y-3">
@@ -79,26 +79,26 @@ export default function QueryDiff({ queries }) {
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-mono text-surface-500">{q.query_id}</span>
+                  <span className="text-xs font-mono text-slate-400">{q.query_id}</span>
                   {q.is_broken && q.fix_pattern && <PatternBadge pattern={q.fix_pattern} />}
                   {q.parse_error && (
                     <span className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">parse error</span>
                   )}
                 </div>
-                <code className="text-xs text-surface-300 line-clamp-2 leading-relaxed block">
+                <code className="text-xs text-slate-200 line-clamp-2 leading-relaxed block">
                   {q.query_text}
                 </code>
                 {q.all_tables?.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {q.all_tables.map(t => (
-                      <span key={t} className="text-[10px] px-1.5 py-0.5 bg-surface-700 text-surface-400 rounded font-mono border border-surface-600">
+                      <span key={t} className="text-[10px] px-1.5 py-0.5 bg-surface-700 text-slate-300 rounded font-mono border border-surface-600">
                         {t}
                       </span>
                     ))}
                   </div>
                 )}
               </div>
-              <span className="text-surface-600 text-xs shrink-0">
+              <span className="text-slate-400 text-xs shrink-0">
                 {expanded === q.query_id ? '▲' : '▼'}
               </span>
             </button>
@@ -108,7 +108,7 @@ export default function QueryDiff({ queries }) {
               <div className="px-5 pb-5 border-t border-surface-700 pt-4 space-y-4">
                 {/* Full SQL */}
                 <div>
-                  <p className="text-xs text-surface-500 font-semibold mb-2 uppercase tracking-wide">SQL</p>
+                  <p className="text-xs text-slate-400 font-semibold mb-2 uppercase tracking-wide">SQL</p>
                   <pre className="bg-surface-900 rounded-lg p-4 text-xs font-mono text-green-300 overflow-auto leading-relaxed">
                     {q.query_text}
                   </pre>

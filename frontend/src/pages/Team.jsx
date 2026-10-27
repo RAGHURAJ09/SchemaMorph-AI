@@ -39,9 +39,11 @@ const STATUS_COLORS = { online: '#1D9E75', away: '#f59e0b', offline: 'rgba(255,2
 
 export function MemberCard({ member }) {
   const rc = ROLE_COLORS[member.role] || ROLE_COLORS.Viewer
+  const [imgError, setImgError] = useState(false)
   
   const imgMap = {
     'Raghuraj': '/raghu.jpeg',
+    'Raghuraj Pratap Rajpoot': '/raghu.jpeg',
     'Samridhi Jaiswal': '/samridhi.jpeg',
     'Samridhi Singh': '/samridhi_singh.jpeg'
   }
@@ -58,7 +60,31 @@ export function MemberCard({ member }) {
       >
         {/* Avatar */}
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-          <img src={imgSrc} className="team-img" alt={member.name} onError={(e) => { e.target.style.display = 'none'; }} />
+          {!imgError ? (
+            <img
+              src={imgSrc}
+              className="team-img"
+              alt={member.name}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div
+              className="team-img"
+              style={{
+                background: `linear-gradient(135deg, ${member.color || '#1D9E75'}33, ${member.color || '#1D9E75'}88)`,
+                border: `2px solid ${member.color || '#1D9E75'}`,
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 32,
+                fontWeight: 700,
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}
+            >
+              {member.initials || member.name.charAt(0)}
+            </div>
+          )}
         </div>
 
         <h3 style={{ fontSize: 20, marginBottom: 5, textAlign: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>{member.name}</h3>
@@ -66,64 +92,8 @@ export function MemberCard({ member }) {
           {member.role}
         </p>
 
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', textAlign: 'center', marginBottom: 20 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', fontFamily: 'Inter, sans-serif', textAlign: 'center', marginBottom: 20 }}>
           {member.email}
-        </div>
-
-        {/* Stats row */}
-        <div style={{
-          display: 'flex', gap: 0, marginBottom: 16,
-          background: 'rgba(255,255,255,0.03)',
-          borderRadius: 10, overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          {[
-            { label: 'Analyses', val: member.analyses },
-            { label: 'Status', val: member.status.charAt(0).toUpperCase() + member.status.slice(1) },
-            { label: 'Joined', val: new Date(member.joined).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) },
-          ].map((stat, i) => (
-            <div key={stat.label} style={{
-              flex: 1, padding: '10px 14px', textAlign: 'center',
-              borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-            }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: 'Space Grotesk, sans-serif' }}>
-                {stat.val}
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2, fontFamily: 'Inter, sans-serif' }}>
-                {stat.label}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Skills */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
-          {member.skills.map(skill => (
-            <span key={skill} style={{
-              fontSize: 10, padding: '3px 9px',
-              borderRadius: 6,
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.09)',
-              color: 'rgba(255,255,255,0.5)',
-              fontFamily: 'Inter, sans-serif',
-            }}>{skill}</span>
-          ))}
-        </div>
-
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: 8, width: '100%', marginTop: 'auto' }}>
-          <button
-            onClick={() => toast.success(`Message sent to ${member.name}!`)}
-            style={{
-              flex: 1, padding: '7px',
-              background: `${member.color}12`,
-              border: `1px solid ${member.color}25`,
-              borderRadius: 8, color: member.color,
-              fontSize: 11, fontWeight: 500,
-              fontFamily: 'Space Grotesk, sans-serif',
-              cursor: 'pointer',
-            }}
-          >Message</button>
         </div>
       </motion.div>
     </Tilt>
@@ -134,17 +104,12 @@ export function MemberCard({ member }) {
 export default function Team() {
   return (
     <div style={{ padding: '28px 32px', maxWidth: 1200, margin: '0 auto' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 32, alignItems: 'stretch' }}>
-        {/* Top: member grid */}
-        <div>
-          <div className="team-container" style={{ padding: '10px 0' }}>
-            {TEAM_MEMBERS.map(m => (
-              <MemberCard key={m.id} member={m} />
-            ))}
-          </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 32, alignItems: 'center' }}>
+        <div className="team-container" style={{ padding: '10px 0', justifyContent: 'center' }}>
+          {TEAM_MEMBERS.map(m => (
+            <MemberCard key={m.id} member={m} />
+          ))}
         </div>
-
-
       </div>
     </div>
   )

@@ -156,7 +156,7 @@ export default function ProfileSettings() {
             <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: 'Space Grotesk, sans-serif' }}>
               {user?.email?.split('@')[0]}
             </div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', fontFamily: 'Inter, sans-serif', marginTop: 4 }}>
               {user?.email}
             </div>
             <div style={{
@@ -306,7 +306,7 @@ export default function ProfileSettings() {
             <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: 'Space Grotesk, sans-serif' }}>
               Delete Account?
             </h3>
-            <p style={{ margin: '0 0 20px', fontSize: 13, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: 'rgba(255,255,255,0.65)', fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
               This will permanently delete your account and all analysis data. Type <strong style={{ color: '#f87171' }}>DELETE</strong> to confirm.
             </p>
             <Input value={deleteConfirm} onChange={e => setDeleteConfirm(e.target.value)} placeholder="Type DELETE to confirm" />

@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 function StatCard({ label, value, icon, color = '#1D9E75' }) {
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.03)',
+      background: 'rgba(15,15,22,0.85)',
       border: `1px solid rgba(255,255,255,0.07)`,
       borderRadius: 14, padding: '18px 22px',
       display: 'flex', alignItems: 'center', gap: 16,
@@ -29,7 +29,7 @@ function StatCard({ label, value, icon, color = '#1D9E75' }) {
         <div style={{ fontSize: 24, fontWeight: 700, color: '#fff', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
           {value}
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4, fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4, fontFamily: 'Inter, sans-serif' }}>
           {label}
         </div>
       </div>
@@ -404,7 +404,7 @@ export default function History() {
       <div style={{
         display: 'flex', gap: 16, alignItems: 'center',
         marginBottom: 24, flexWrap: 'wrap', justifyContent: 'space-between',
-        background: 'rgba(255,255,255,0.02)', padding: '16px 20px',
+        background: 'rgba(15,15,22,0.8)', padding: '16px 20px',
         borderRadius: 14, border: '1px solid rgba(255,255,255,0.05)'
       }}>
         {/* Filters Group */}
@@ -584,8 +584,8 @@ export default function History() {
 
       {/* Table */}
       <div style={{
-        background: 'rgba(255,255,255,0.025)',
-        border: '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(15,15,22,0.85)',
+        border: '1px solid rgba(255,255,255,0.1)',
         borderRadius: 16, overflow: 'hidden',
       }}>
         {/* Table header */}
@@ -594,12 +594,12 @@ export default function History() {
           gridTemplateColumns: '2fr 1fr 1fr 1fr 100px 100px',
           padding: '12px 20px',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(255,255,255,0.02)',
+          background: 'rgba(255,255,255,0.05)',
         }}>
           {['Analysis ID', 'Date', 'Tables', 'Services', 'Status', 'Action'].map(h => (
             <span key={h} style={{
               fontSize: 11, fontWeight: 600, letterSpacing: '0.07em',
-              color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase',
               fontFamily: 'Space Grotesk, sans-serif',
             }}>{h}</span>
           ))}
@@ -614,7 +614,7 @@ export default function History() {
               animation: 'spin 0.8s linear infinite',
               margin: '0 auto 12px',
             }} />
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, fontFamily: 'Inter, sans-serif' }}>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, fontFamily: 'Inter, sans-serif' }}>
               Loading analyses...
             </p>
           </div>
@@ -624,7 +624,7 @@ export default function History() {
             <p style={{ fontSize: 16, fontWeight: 600, color: '#fff', fontFamily: 'Space Grotesk, sans-serif', marginBottom: 8 }}>
               {search ? 'No matching analyses' : 'No analyses yet'}
             </p>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter, sans-serif', marginBottom: 24 }}>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontFamily: 'Inter, sans-serif', marginBottom: 24 }}>
               {search ? 'Try a different search term.' : 'Upload a schema to run your first analysis.'}
             </p>
             {!search && (
@@ -669,14 +669,14 @@ export default function History() {
                   {project.id}
                 </div>
                 {project.name && (
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontFamily: 'Inter, sans-serif', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontFamily: 'Inter, sans-serif', marginTop: 2 }}>
                     {project.name}
                   </div>
                 )}
               </div>
 
               {/* Date */}
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontFamily: 'Inter, sans-serif' }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: 'Inter, sans-serif' }}>
                 {project.created_at ? new Date(project.created_at).toLocaleDateString('en-IN', {
                   day: '2-digit', month: 'short', year: 'numeric'
                 }) : '—'}
@@ -722,7 +722,7 @@ export default function History() {
 
       {filtered.length > 0 && (
         <p style={{
-          marginTop: 12, fontSize: 12, color: 'rgba(255,255,255,0.25)',
+          marginTop: 12, fontSize: 12, color: 'rgba(255,255,255,0.55)',
           fontFamily: 'Inter, sans-serif', textAlign: 'right',
         }}>
           Showing {filtered.length} of {projects.length} analyses

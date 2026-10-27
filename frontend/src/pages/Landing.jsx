@@ -535,7 +535,7 @@ function NavBar({ page, setPage }) {
 
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', fontFamily: 'Inter, sans-serif', marginBottom: 2 }}>{emailPrefix}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', fontFamily: 'Inter, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</div>
                     </div>
                   </div>
 
@@ -814,8 +814,10 @@ function SimpleMemberCard({ member }) {
     Viewer: { text: 'rgba(255,255,255,0.5)' },
   }
   const rc = ROLE_COLORS[member.role] || ROLE_COLORS.Viewer
+  const [imgError, setImgError] = useState(false)
   const imgMap = {
     'Raghuraj': '/raghu.jpeg',
+    'Raghuraj Pratap Rajpoot': '/raghu.jpeg',
     'Samridhi Jaiswal': '/samridhi.jpeg',
     'Samridhi Singh': '/samridhi_singh.jpeg'
   }
@@ -831,13 +833,37 @@ function SimpleMemberCard({ member }) {
         style={{ '--secondary': rc.text, width: '100%', minHeight: '100%', cursor: 'default', padding: '30px 20px' }}
       >
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-          <img src={imgSrc} className="team-img" alt={member.name} onError={(e) => { e.target.style.display = 'none'; }} />
+          {!imgError ? (
+            <img
+              src={imgSrc}
+              className="team-img"
+              alt={member.name}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div
+              className="team-img"
+              style={{
+                background: `linear-gradient(135deg, ${member.color || '#1D9E75'}33, ${member.color || '#1D9E75'}88)`,
+                border: `2px solid ${member.color || '#1D9E75'}`,
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 32,
+                fontWeight: 700,
+                fontFamily: 'Space Grotesk, sans-serif'
+              }}
+            >
+              {member.initials || member.name.charAt(0)}
+            </div>
+          )}
         </div>
         <h3 style={{ fontSize: 20, marginBottom: 5, textAlign: 'center', fontFamily: 'Space Grotesk, sans-serif' }}>{member.name}</h3>
         <p className="role" style={{ color: rc.text, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', marginBottom: 16, textAlign: 'center', textTransform: 'uppercase' }}>
           {member.role}
         </p>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', textAlign: 'center', marginBottom: 10 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', fontFamily: 'Inter, sans-serif', textAlign: 'center', marginBottom: 10 }}>
           {member.email}
         </div>
       </motion.div>
@@ -852,7 +878,7 @@ function TeamPage() {
         <div style={{ textAlign: "center", marginBottom: 64 }}>
           <p style={{ color: "#534AB7", fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", marginBottom: 12 }}>THE PEOPLE</p>
           <h1 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(2rem,5vw,3rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.8px", marginBottom: 12 }}>Built by three.</h1>
-          <p style={{ fontFamily: "Inter,sans-serif", fontSize: 15, color: "rgba(255,255,255,0.38)", maxWidth: 440, margin: "0 auto", lineHeight: 1.7 }}>SchemaMorph AI is a capstone project — a real tool built by engineers who needed it to exist.</p>
+          <p style={{ fontFamily: "Inter,sans-serif", fontSize: 15, color: "rgba(255,255,255,0.6)", maxWidth: 440, margin: "0 auto", lineHeight: 1.7 }}>SchemaMorph AI is a capstone project — a real tool built by engineers who needed it to exist.</p>
         </div>
         <div className="team-container">
           {TEAM_MEMBERS.map(m => (
@@ -861,10 +887,10 @@ function TeamPage() {
         </div>
         <FadeIn i={3} style={{ marginTop: 52 }}>
           <div style={{ textAlign: "center", background: "rgba(255,255,255,0.02)", border: "0.5px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: 24 }}>
-            <p style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 13, color: "rgba(255,255,255,0.32)", margin: "0 0 12px" }}>Built with</p>
+            <p style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 13, color: "rgba(255,255,255,0.6)", margin: "0 0 12px" }}>Built with</p>
             <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
               {["FastAPI", "LangChain", "Gemini 1.5", "NetworkX", "sqlglot", "React 18", "React Flow", "Supabase", "Docker"].map(t => (
-                <span key={t} style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "4px 10px", fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "Space Grotesk,sans-serif" }}>{t}</span>
+                <span key={t} style={{ background: "rgba(255,255,255,0.06)", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 6, padding: "4px 10px", fontSize: 12, color: "rgba(255,255,255,0.65)", fontFamily: "Space Grotesk,sans-serif" }}>{t}</span>
               ))}
             </div>
           </div>
