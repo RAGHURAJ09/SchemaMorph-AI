@@ -13,11 +13,13 @@ const TEAM = [
   { name: "Samridhi Jaiswal", role: "Backend Engineer", avatar: "SJ", color: "#993556", bg: "rgba(153,53,86,0.12)", desc: "SQL parsing, database schema, validation pipeline" },
 ];
 const STEPS = [
-  { num: "01", title: "Upload your schema", body: "Paste DDL or upload a .sql file. SchemaMorph accepts PostgreSQL schemas of any size.", icon: "↑", color: "#1D9E75" },
-  { num: "02", title: "Graph is built", body: "sqlglot parses every table and FK. NetworkX builds a weighted graph — FK edges 2×, co-access 1×.", icon: "⬡", color: "#534AB7" },
-  { num: "03", title: "Louvain clustering", body: "Community detection groups tables into microservice candidates — deterministically, before AI sees anything.", icon: "◎", color: "#185FA5" },
-  { num: "04", title: "AI narration", body: "Gemini names each service, writes rationale, and flags cross-boundary queries.", icon: "◇", color: "#BA7517" },
-  { num: "05", title: "Validation & report", body: "Orphan tables, FK integrity, cycle detection, broken query rewrites — all reported.", icon: "✓", color: "#639922" },
+  { num: "01", title: "DDL & Schema Parsing", body: "Upload or paste PostgreSQL DDL. sqlglot parses every table, column data type, primary key, and foreign key constraint.", icon: "↑", color: "#1D9E75" },
+  { num: "02", title: "Workload & Query Analysis", body: "Ingests transaction queries and JOIN logs. Calculates table co-access frequencies and categorizes read/write access patterns.", icon: "⚡", color: "#38bdf8" },
+  { num: "03", title: "Weighted Graph Construction", body: "NetworkX builds an undirected graph with tables as nodes. Structural FK edges are weighted 2×, query co-access weighted 1×.", icon: "⬡", color: "#818cf8" },
+  { num: "04", title: "Louvain Community Detection", body: "Executes mathematical modularity optimization to partition tables into natural service clusters — 100% deterministically.", icon: "◎", color: "#f59e0b" },
+  { num: "05", title: "Gemini AI Semantic Narration", body: "Google Gemini inspects clusters to assign domain-driven microservice names, architectural rationale, and API boundaries.", icon: "◇", color: "#ec4899" },
+  { num: "06", title: "Rule-Based Integrity Validation", body: "Rigorous engine validates partition completeness, detects cross-boundary queries, cyclic references, and flags orphaned tables.", icon: "✓", color: "#10b981" },
+  { num: "07", title: "DDL Export & React Flow Dashboard", body: "Generates clean, per-service isolated SQL schemas, downloadable Markdown audit reports, and interactive React Flow visualization.", icon: "↗", color: "#6366f1" },
 ];
 const FEATURES = [
   { icon: "⬡", label: "Graph analysis", text: "FK + co-access weighted graph via NetworkX" },
@@ -28,12 +30,12 @@ const FEATURES = [
   { icon: "→", label: "React Flow viz", text: "Interactive, color-coded dependency graph" },
 ];
 const SERVICES = [
-  { name: "User Service", x: .18, y: .35, color: "#1D9E75", tables: ["users", "sessions", "auth"] },
-  { name: "Order Service", x: .42, y: .22, color: "#534AB7", tables: ["orders", "order_items"] },
-  { name: "Product Service", x: .68, y: .35, color: "#185FA5", tables: ["products", "inventory", "categories"] },
-  { name: "Payment Service", x: .32, y: .68, color: "#BA7517", tables: ["payments", "invoices"] },
-  { name: "Analytics", x: .58, y: .70, color: "#993556", tables: ["events", "logs"] },
-  { name: "Notification", x: .82, y: .55, color: "#639922", tables: ["notifications"] },
+  { name: "User Service", x: .18, y: .32, color: "#1D9E75", tables: ["users", "sessions", "auth"] },
+  { name: "Order Service", x: .40, y: .20, color: "#818cf8", tables: ["orders", "order_items"] },
+  { name: "Product Service", x: .74, y: .28, color: "#38bdf8", tables: ["products", "inventory", "categories"] },
+  { name: "Payment Service", x: .26, y: .62, color: "#f59e0b", tables: ["payments", "invoices"] },
+  { name: "Analytics", x: .52, y: .66, color: "#ec4899", tables: ["events", "logs"] },
+  { name: "Notification", x: .82, y: .58, color: "#10b981", tables: ["notifications"] },
 ];
 const EDGES = [[0, 1], [0, 3], [1, 2], [1, 3], [2, 4], [3, 4], [4, 5], [1, 5]];
 
@@ -48,106 +50,273 @@ function DashboardCanvas() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
+    if (!ctx) return;
     const st = stateRef.current;
     const services = servicesRef.current;
-    let W, H;
+    let W = 0, H = 0;
 
-    function resize() { W = canvas.width = canvas.offsetWidth; H = canvas.height = canvas.offsetHeight; st.mx = W / 2; st.my = H / 2; }
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = canvas.offsetWidth;
+      H = canvas.offsetHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      st.mx = W / 2;
+      st.my = H / 2;
+    }
     resize();
 
     const onMove = e => {
       const r = canvas.getBoundingClientRect();
-      st.mx = e.clientX - r.left; st.my = e.clientY - r.top;
+      st.mx = e.clientX - r.left;
+      st.my = e.clientY - r.top;
       if (st.isDragging && st.dragS) {
-        st.dragS.x = (st.mx - st.dragOffX) / W; st.dragS.y = (st.my - st.dragOffY) / H;
-        st.dragS.x = Math.max(.05, Math.min(.95, st.dragS.x));
-        st.dragS.y = Math.max(.08, Math.min(.80, st.dragS.y));
+        st.dragS.x = (st.mx - st.dragOffX) / W;
+        st.dragS.y = (st.my - st.dragOffY) / H;
+        st.dragS.x = Math.max(.08, Math.min(.92, st.dragS.x));
+        st.dragS.y = Math.max(.10, Math.min(.85, st.dragS.y));
       }
       st.hoveredS = null;
-      services.forEach(s => { if (Math.hypot(st.mx - s.x * W, st.my - s.y * H) < 36) st.hoveredS = s; });
+      services.forEach(s => {
+        if (Math.hypot(st.mx - s.x * W, st.my - s.y * H) < 46) st.hoveredS = s;
+      });
       canvas.style.cursor = st.hoveredS || st.isDragging ? "grab" : "default";
     };
+
     const onDown = e => {
       const r = canvas.getBoundingClientRect();
       const lx = e.clientX - r.left, ly = e.clientY - r.top;
       services.forEach(s => {
-        if (Math.hypot(lx - s.x * W, ly - s.y * H) < 36) {
-          st.isDragging = true; st.dragS = s; st.dragOffX = lx - s.x * W; st.dragOffY = ly - s.y * H;
+        if (Math.hypot(lx - s.x * W, ly - s.y * H) < 46) {
+          st.isDragging = true;
+          st.dragS = s;
+          st.dragOffX = lx - s.x * W;
+          st.dragOffY = ly - s.y * H;
           canvas.style.cursor = "grabbing";
         }
       });
     };
-    const onUp = () => { st.isDragging = false; st.dragS = null; canvas.style.cursor = "default"; };
+
+    const onUp = () => {
+      st.isDragging = false;
+      st.dragS = null;
+      canvas.style.cursor = st.hoveredS ? "grab" : "default";
+    };
+
+    // Touch support for mobile/tablets
+    const onTouchStart = e => {
+      if (!e.touches || !e.touches[0]) return;
+      const r = canvas.getBoundingClientRect();
+      const lx = e.touches[0].clientX - r.left, ly = e.touches[0].clientY - r.top;
+      st.mx = lx; st.my = ly;
+      services.forEach(s => {
+        if (Math.hypot(lx - s.x * W, ly - s.y * H) < 48) {
+          st.isDragging = true;
+          st.dragS = s;
+          st.dragOffX = lx - s.x * W;
+          st.dragOffY = ly - s.y * H;
+          st.hoveredS = s;
+        }
+      });
+    };
+    const onTouchMove = e => {
+      if (!e.touches || !e.touches[0] || !st.isDragging || !st.dragS) return;
+      const r = canvas.getBoundingClientRect();
+      st.mx = e.touches[0].clientX - r.left;
+      st.my = e.touches[0].clientY - r.top;
+      st.dragS.x = (st.mx - st.dragOffX) / W;
+      st.dragS.y = (st.my - st.dragOffY) / H;
+      st.dragS.x = Math.max(.08, Math.min(.92, st.dragS.x));
+      st.dragS.y = Math.max(.10, Math.min(.85, st.dragS.y));
+    };
+    const onTouchEnd = () => {
+      st.isDragging = false;
+      st.dragS = null;
+    };
 
     canvas.addEventListener("mousemove", onMove);
     canvas.addEventListener("mousedown", onDown);
     canvas.addEventListener("mouseup", onUp);
     canvas.addEventListener("mouseleave", onUp);
+    canvas.addEventListener("touchstart", onTouchStart, { passive: true });
+    canvas.addEventListener("touchmove", onTouchMove, { passive: true });
+    canvas.addEventListener("touchend", onTouchEnd);
     window.addEventListener("resize", resize);
 
     function draw() {
       ctx.clearRect(0, 0, W, H);
-      st.t += .018;
-      const offX = (st.mx - W / 2) * .05, offY = (st.my - H / 2) * .05;
+      st.t += 0.018;
+      const offX = (st.mx - W / 2) * 0.04;
+      const offY = (st.my - H / 2) * 0.04;
 
-      // bg glow
-      const rad = ctx.createRadialGradient(W / 2 + offX, H / 2 + offY, 0, W / 2 + offX, H / 2 + offY, W * .6);
-      rad.addColorStop(0, "rgba(29,158,117,0.07)"); rad.addColorStop(1, "transparent");
-      ctx.fillStyle = rad; ctx.fillRect(0, 0, W, H);
+      // Subtle ambient background grid & radial glow
+      const rad = ctx.createRadialGradient(W / 2 + offX, H / 2 + offY, 0, W / 2 + offX, H / 2 + offY, W * 0.65);
+      rad.addColorStop(0, "rgba(29, 158, 117, 0.08)");
+      rad.addColorStop(0.5, "rgba(99, 102, 241, 0.04)");
+      rad.addColorStop(1, "transparent");
+      ctx.fillStyle = rad;
+      ctx.fillRect(0, 0, W, H);
 
-      // edges
+      // Edges with glowing gradient & active data packets
       EDGES.forEach(([a, b]) => {
         const sa = services[a], sb = services[b];
         const x1 = sa.x * W + offX * (1 - sa.x), y1 = sa.y * H + offY * (1 - sa.y);
         const x2 = sb.x * W + offX * (1 - sb.x), y2 = sb.y * H + offY * (1 - sb.y);
+
         const grad = ctx.createLinearGradient(x1, y1, x2, y2);
-        grad.addColorStop(0, sa.color + "44"); grad.addColorStop(1, sb.color + "44");
-        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-        ctx.strokeStyle = grad; ctx.lineWidth = 1.5; ctx.stroke();
-        const prog = ((st.t * .5 + a * .3) % 1);
-        ctx.beginPath(); ctx.arc(x1 + (x2 - x1) * prog, y1 + (y2 - y1) * prog, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = sa.color + "cc"; ctx.fill();
+        grad.addColorStop(0, sa.color + "66");
+        grad.addColorStop(1, sb.color + "66");
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Animated data packet on edge
+        const prog = ((st.t * 0.45 + a * 0.28) % 1);
+        const px = x1 + (x2 - x1) * prog;
+        const py = y1 + (y2 - y1) * prog;
+
+        ctx.save();
+        ctx.shadowColor = sa.color;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.fillStyle = sa.color + "88";
+        ctx.fill();
+        ctx.restore();
       });
 
-      // nodes
+      // Nodes
       services.forEach((s, i) => {
-        const pf = 1 - (i * .04);
-        const sx = s.x * W + offX * pf, sy = s.y * H + offY * pf;
+        const pf = 1 - (i * 0.03);
+        const sx = s.x * W + offX * pf;
+        const sy = s.y * H + offY * pf;
         const isH = s === st.hoveredS || s === st.dragS;
-        const r = isH ? 38 : 30;
-        const glow = Math.sin(st.t + i * 1.1) * .15 + .85;
-        if (isH) {
-          ctx.beginPath(); ctx.arc(sx, sy, r + 10, 0, Math.PI * 2);
-          ctx.strokeStyle = s.color + "44"; ctx.lineWidth = 7; ctx.stroke();
-        }
-        ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2);
-        ctx.fillStyle = s.color + Math.floor(glow * 32).toString(16).padStart(2, "0");
+        const r = isH ? 44 : 36;
+        const pulse = Math.sin(st.t * 2.5 + i * 1.2) * 2;
+
+        ctx.save();
+
+        // Outer glow
+        ctx.shadowColor = s.color;
+        ctx.shadowBlur = isH ? 32 : 16;
+
+        // Concentric animated ripple ring
+        ctx.beginPath();
+        ctx.arc(sx, sy, r + 7 + pulse, 0, Math.PI * 2);
+        ctx.strokeStyle = s.color + (isH ? "88" : "33");
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Node dark solid disc
+        ctx.beginPath();
+        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.fillStyle = "#0c101c";
         ctx.fill();
-        ctx.strokeStyle = s.color + Math.floor(glow * 200).toString(16).padStart(2, "0");
-        ctx.lineWidth = 1.5; ctx.stroke();
-        ctx.beginPath(); ctx.arc(sx, sy, 6, 0, Math.PI * 2);
-        ctx.fillStyle = s.color; ctx.fill();
 
-        ctx.font = "600 11px 'Space Grotesk',sans-serif";
-        ctx.fillStyle = "rgba(255,255,255,0.88)"; ctx.textAlign = "center";
-        ctx.fillText(s.name, sx, sy + r + 13);
+        // Node vibrant tint fill
+        ctx.fillStyle = s.color + (isH ? "44" : "28");
+        ctx.fill();
 
+        // Node border
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = isH ? 3 : 2;
+        ctx.stroke();
+
+        // Glowing center core dot
+        ctx.beginPath();
+        ctx.arc(sx, sy, 8, 0, Math.PI * 2);
+        ctx.fillStyle = s.color;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+
+        ctx.restore();
+
+        // Service Name (crystal clear, bright white with text contrast)
+        ctx.save();
+        ctx.font = "700 13px 'Space Grotesk', sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.shadowColor = "rgba(0,0,0,0.85)";
+        ctx.shadowBlur = 6;
+        ctx.fillText(s.name, sx, sy + r + 18);
+
+        // Table count badge
+        ctx.font = "600 11px 'Inter', sans-serif";
+        ctx.fillStyle = s.color;
+        ctx.shadowBlur = 0;
+        ctx.fillText(`${s.tables.length} tables · drag me`, sx, sy + r + 34);
+        ctx.restore();
+
+        // Hover / Drag Tooltip card showing exact tables
         if (isH) {
-          ctx.font = "400 9px 'Inter',sans-serif"; ctx.fillStyle = s.color + "cc";
-          s.tables.forEach((t, ti) => ctx.fillText(t, sx, sy + r + 25 + ti * 11));
+          ctx.save();
+          const boxW = 175;
+          const boxH = 30 + s.tables.length * 18;
+          const bx = Math.max(12, Math.min(W - boxW - 12, sx - boxW / 2));
+          const by = Math.max(12, sy - r - boxH - 14);
+
+          // Card background
+          ctx.fillStyle = "rgba(10, 16, 28, 0.95)";
+          ctx.strokeStyle = s.color + "99";
+          ctx.lineWidth = 1.5;
+          ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+          ctx.shadowBlur = 14;
+
+          ctx.beginPath();
+          if (ctx.roundRect) {
+            ctx.roundRect(bx, by, boxW, boxH, 10);
+          } else {
+            ctx.rect(bx, by, boxW, boxH);
+          }
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.shadowBlur = 0;
+
+          // Header
+          ctx.font = "700 10px 'Space Grotesk', sans-serif";
+          ctx.fillStyle = s.color;
+          ctx.textAlign = "left";
+          ctx.fillText("MICROSERVICE BOUNDARY", bx + 12, by + 18);
+
+          // Table list
+          ctx.font = "500 11px 'JetBrains Mono', monospace";
+          ctx.fillStyle = "#e2e8f0";
+          s.tables.forEach((t, ti) => {
+            ctx.fillText("• " + t, bx + 12, by + 36 + ti * 18);
+          });
+
+          ctx.restore();
         }
       });
 
       animRef.current = requestAnimationFrame(draw);
     }
     draw();
+
     return () => {
       cancelAnimationFrame(animRef.current);
       canvas.removeEventListener("mousemove", onMove);
       canvas.removeEventListener("mousedown", onDown);
       canvas.removeEventListener("mouseup", onUp);
       canvas.removeEventListener("mouseleave", onUp);
+      canvas.removeEventListener("touchstart", onTouchStart);
+      canvas.removeEventListener("touchmove", onTouchMove);
+      canvas.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("resize", resize);
     };
   }, []);
@@ -330,28 +499,30 @@ function StepRow({ step, i, isLast }) {
 
       {/* Step card content */}
       <motion.div
-        whileHover={{ x: 6, borderColor: `${step.color}55` }}
+        whileHover={{ x: 6, borderColor: `${step.color}88` }}
         transition={{ duration: 0.2 }}
         style={{
           flex: 1,
-          background: "rgba(255,255,255,0.025)",
-          backdropFilter: "blur(10px)",
-          border: "0.5px solid rgba(255,255,255,0.08)",
-          borderRadius: 12,
-          padding: "16px 20px",
-          marginBottom: isLast ? 0 : 14,
+          background: "rgba(10, 15, 26, 0.82)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 14,
+          padding: "18px 22px",
+          marginBottom: isLast ? 0 : 16,
+          boxShadow: "0 10px 25px -10px rgba(0,0,0,0.5)",
           transition: "border-color 0.25s, box-shadow 0.25s",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-          <span style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 11, fontWeight: 700, color: step.color, letterSpacing: "0.12em", background: `${step.color}15`, padding: "2px 8px", borderRadius: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <span style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 12, fontWeight: 700, color: step.color, letterSpacing: "0.12em", background: `${step.color}22`, border: `1px solid ${step.color}44`, padding: "3px 10px", borderRadius: 6 }}>
             {step.num}
           </span>
-          <h3 style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 15, color: "#fff", margin: 0 }}>
+          <h3 style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 700, fontSize: 16, color: "#fff", margin: 0, textShadow: "0 2px 10px rgba(0,0,0,0.8)" }}>
             {step.title}
           </h3>
         </div>
-        <p style={{ fontFamily: "Inter,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.65, margin: 0 }}>
+        <p style={{ fontFamily: "Inter,sans-serif", fontSize: 13.5, color: "#cbd5e1", lineHeight: 1.65, margin: 0 }}>
           {step.body}
         </p>
       </motion.div>
@@ -638,39 +809,39 @@ function HeroSection() {
         top: "50%",
         left: "50%",
         transform: "translate(-50%, -50%)",
-        width: "min(780px, 92vw)",
-        height: "560px",
-        background: "radial-gradient(ellipse 65% 55% at 50% 50%, rgba(6, 8, 16, 0.3) 0%, transparent 80%)",
+        width: "min(860px, 94vw)",
+        height: "600px",
+        background: "radial-gradient(ellipse 65% 55% at 50% 50%, rgba(6, 8, 16, 0.45) 0%, transparent 80%)",
         pointerEvents: "none",
         zIndex: 1,
       }} />
-      <div style={{ position: "relative", zIndex: 3, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(29,158,117,0.1)", border: "0.5px solid rgba(29,158,117,0.3)", borderRadius: 100, padding: "5px 14px", marginBottom: 26, animation: "fadeUp 0.6s ease both" }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#1D9E75", display: "inline-block" }} />
-        <span style={{ fontSize: 12, color: "#5DCAA5", fontFamily: "Space Grotesk,sans-serif", fontWeight: 500 }}>Graph-first microservice discovery</span>
+      <div style={{ position: "relative", zIndex: 3, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(29,158,117,0.16)", border: "1px solid rgba(29,158,117,0.45)", borderRadius: 100, padding: "6px 18px", marginBottom: 26, animation: "fadeUp 0.6s ease both", boxShadow: "0 0 20px rgba(29,158,117,0.25)" }}>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1D9E75", boxShadow: "0 0 10px #1D9E75", display: "inline-block" }} />
+        <span style={{ fontSize: 13, color: "#5DCAA5", fontFamily: "Space Grotesk,sans-serif", fontWeight: 700, letterSpacing: "0.08em" }}>Graph-first microservice discovery</span>
       </div>
-      <h1 style={{ position: "relative", zIndex: 3, fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(2.6rem,6vw,4rem)", fontWeight: 700, color: "#fff", lineHeight: 1.08, letterSpacing: "-2px", marginBottom: 22, animation: "fadeUp 0.6s 0.1s ease both", textShadow: "0 2px 20px rgba(6,8,16,0.8)" }}>
+      <h1 style={{ position: "relative", zIndex: 3, fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(2.6rem,6vw,4rem)", fontWeight: 700, color: "#fff", lineHeight: 1.08, letterSpacing: "-2px", marginBottom: 22, animation: "fadeUp 0.6s 0.1s ease both", textShadow: "0 4px 30px rgba(6,8,16,0.95), 0 2px 10px rgba(0,0,0,0.9)" }}>
         <TypewriterText text="Split your monolith." delay={300} speed={50} />
         <br />
         <span style={{ color: "#1D9E75" }}><TypewriterText text="Not your sanity." delay={1800} speed={52} /></span>
       </h1>
-      <p style={{ position: "relative", zIndex: 3, fontSize: "clamp(1rem,2vw,1.15rem)", color: "rgba(255,255,255,0.44)", lineHeight: 1.72, maxWidth: 530, margin: "0 auto 40px", fontFamily: "Inter,sans-serif", animation: "fadeUp 0.6s 0.25s ease both" }}>
+      <p style={{ position: "relative", zIndex: 3, fontSize: "clamp(1.05rem,2vw,1.2rem)", color: "#e2e8f0", lineHeight: 1.72, maxWidth: 560, margin: "0 auto 40px", fontFamily: "Inter,sans-serif", animation: "fadeUp 0.6s 0.25s ease both", textShadow: "0 2px 18px rgba(6,8,16,0.95), 0 0 30px rgba(0,0,0,0.9)" }}>
         Upload a PostgreSQL schema. SchemaMorph builds a dependency graph, runs Louvain clustering, and delivers named microservice boundaries with validation and per-service DDL.
       </p>
       <div style={{ position: "relative", zIndex: 3, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", animation: "fadeUp 0.6s 0.35s ease both" }}>
         {token ? (
-          <button onClick={() => navigate("/upload")} style={{ background: "#1D9E75", color: "#fff", padding: "13px 28px", borderRadius: 10, fontSize: 15, fontWeight: 600, fontFamily: "Space Grotesk,sans-serif", border: "none", cursor: "pointer", display: "inline-block" }}>Go to Dashboard →</button>
+          <button onClick={() => navigate("/upload")} style={{ background: "#1D9E75", color: "#fff", padding: "13px 28px", borderRadius: 10, fontSize: 15, fontWeight: 600, fontFamily: "Space Grotesk,sans-serif", border: "none", cursor: "pointer", display: "inline-block", boxShadow: "0 0 20px rgba(29,158,117,0.4)" }}>Go to Dashboard →</button>
         ) : (
           <>
-            <button onClick={() => navigate("/register")} style={{ background: "#1D9E75", color: "#fff", padding: "13px 28px", borderRadius: 10, fontSize: 15, fontWeight: 600, fontFamily: "Space Grotesk,sans-serif", border: "none", cursor: "pointer", display: "inline-block" }}>Get started →</button>
-            <button onClick={() => navigate("/login")} style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.82)", border: "0.5px solid rgba(255,255,255,0.15)", padding: "13px 24px", borderRadius: 10, fontSize: 15, fontWeight: 500, fontFamily: "Space Grotesk,sans-serif", cursor: "pointer", display: "inline-block" }}>Log in</button>
+            <button onClick={() => navigate("/register")} style={{ background: "#1D9E75", color: "#fff", padding: "13px 28px", borderRadius: 10, fontSize: 15, fontWeight: 600, fontFamily: "Space Grotesk,sans-serif", border: "none", cursor: "pointer", display: "inline-block", boxShadow: "0 0 20px rgba(29,158,117,0.4)" }}>Get started →</button>
+            <button onClick={() => navigate("/login")} style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.92)", border: "1px solid rgba(255,255,255,0.22)", padding: "13px 24px", borderRadius: 10, fontSize: 15, fontWeight: 500, fontFamily: "Space Grotesk,sans-serif", cursor: "pointer", display: "inline-block" }}>Log in</button>
           </>
         )}
       </div>
       <div style={{ position: "relative", zIndex: 3, display: "flex", gap: 52, justifyContent: "center", marginTop: 60, flexWrap: "wrap", animation: "fadeUp 0.6s 0.5s ease both" }}>
         {[{ v: 7, s: " steps", l: "pipeline stages" }, { v: 8, s: " tables", l: "internal schema" }, { v: 100, s: "%", l: "deterministic" }].map((st, i) => (
           <div key={st.l} style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "2.1rem", fontWeight: 700, color: "#1D9E75", fontFamily: "Space Grotesk,sans-serif", lineHeight: 1 }}><AnimCounter target={st.v} suffix={st.s} delay={800 + i * 200} /></div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 5, fontFamily: "Inter,sans-serif" }}>{st.l}</div>
+            <div style={{ fontSize: "2.1rem", fontWeight: 700, color: "#1D9E75", fontFamily: "Space Grotesk,sans-serif", lineHeight: 1, textShadow: "0 0 24px rgba(29, 158, 117, 0.6), 0 2px 10px rgba(0,0,0,0.9)" }}><AnimCounter target={st.v} suffix={st.s} delay={800 + i * 200} /></div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.78)", marginTop: 6, fontFamily: "Inter,sans-serif", fontWeight: 500, textShadow: "0 2px 10px rgba(0,0,0,0.9)" }}>{st.l}</div>
           </div>
         ))}
       </div>
@@ -692,11 +863,11 @@ function HeroSection() {
         }}
         onClick={() => document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" })}
       >
-        <span style={{ fontSize: 11, fontFamily: "Space Grotesk,sans-serif", color: "rgba(255,255,255,0.35)", letterSpacing: "0.14em", textTransform: "uppercase" }}>Scroll to explore</span>
+        <span style={{ fontSize: 12, fontFamily: "Space Grotesk,sans-serif", color: "rgba(255,255,255,0.7)", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 500, textShadow: "0 2px 8px rgba(0,0,0,0.9)" }}>Scroll to explore</span>
         <motion.div
           animate={{ y: [0, 6, 0] }}
           transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-          style={{ color: "#1D9E75", fontSize: 16 }}
+          style={{ color: "#1D9E75", fontSize: 18, filter: "drop-shadow(0 0 8px #1D9E75)" }}
         >
           ↓
         </motion.div>
@@ -708,46 +879,102 @@ function HeroSection() {
 /* ─── Dashboard Preview Section ──────────────────────────────── */
 function DashboardSection() {
   return (
-    <section id="dashboard" style={{ background: "transparent", padding: "90px 24px", position: "relative" }}>
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        <FadeIn style={{ textAlign: "center", marginBottom: 48 }}>
-          <p style={{ color: "#185FA5", fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", marginBottom: 10 }}>DASHBOARD</p>
-          <h2 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.7rem,4vw,2.6rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", margin: "0 0 10px" }}>See your schema come alive</h2>
-          <p style={{ fontFamily: "Inter,sans-serif", fontSize: 14, color: "rgba(255,255,255,0.36)", maxWidth: 400, margin: "0 auto" }}>Drag the service nodes — they're live. The graph responds to your cursor.</p>
+    <section id="dashboard" style={{ background: "transparent", padding: "100px 24px 80px", position: "relative" }}>
+      <div style={{ maxWidth: 1140, margin: "0 auto" }}>
+        <FadeIn style={{ textAlign: "center", marginBottom: 44, position: "relative" }}>
+          {/* Subtle localized dark aura behind text so 3D background never obscures typography */}
+          <div style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "min(680px, 94vw)",
+            height: "170px",
+            background: "radial-gradient(ellipse 65% 65% at 50% 50%, rgba(6, 8, 16, 0.75) 0%, rgba(6, 8, 16, 0.3) 60%, transparent 100%)",
+            borderRadius: "50%",
+            filter: "blur(16px)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }} />
+
+          {/* Prominent Eyebrow Badge */}
+          <div style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(56, 189, 248, 0.14)", border: "1px solid rgba(56, 189, 248, 0.4)", borderRadius: 100, padding: "6px 18px", marginBottom: 14, boxShadow: "0 0 20px rgba(56, 189, 248, 0.2)" }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#38bdf8", boxShadow: "0 0 10px #38bdf8", display: "inline-block" }} />
+            <span style={{ color: "#38bdf8", fontFamily: "Space Grotesk,sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.14em" }}>INTERACTIVE DASHBOARD</span>
+          </div>
+
+          {/* Heading with crisp, strong text shadow */}
+          <h2 style={{
+            position: "relative",
+            zIndex: 1,
+            fontFamily: "Space Grotesk,sans-serif",
+            fontSize: "clamp(1.9rem,4vw,2.8rem)",
+            fontWeight: 700,
+            color: "#ffffff",
+            letterSpacing: "-0.5px",
+            margin: "0 0 12px",
+            textShadow: "0 4px 28px rgba(6, 8, 16, 0.95), 0 2px 10px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 0, 0, 0.85)"
+          }}>
+            See your schema come alive
+          </h2>
+
+          {/* Subtitle: High contrast, large, sharp and readable */}
+          <p style={{
+            position: "relative",
+            zIndex: 1,
+            fontFamily: "Inter,sans-serif",
+            fontSize: 16,
+            fontWeight: 500,
+            color: "#f1f5f9",
+            maxWidth: 620,
+            margin: "0 auto",
+            lineHeight: 1.6,
+            textShadow: "0 2px 16px rgba(0, 0, 0, 0.95), 0 0 24px rgba(0, 0, 0, 0.95)"
+          }}>
+            Drag the service nodes — they're live. The graph responds to your cursor.
+          </p>
         </FadeIn>
+
         <motion.div
           initial={{ opacity: 0, y: 45, scale: 0.98 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true, amount: 0.2 }}
+          viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            borderRadius: 16,
-            border: "0.5px solid rgba(29, 158, 117, 0.25)",
+            borderRadius: 18,
+            border: "1px solid rgba(29, 158, 117, 0.35)",
             overflow: "hidden",
-            background: "rgba(9, 13, 24, 0.72)",
+            background: "rgba(9, 13, 24, 0.85)",
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            boxShadow: "0 25px 60px -15px rgba(0,0,0,0.7), 0 0 35px -10px rgba(29,158,117,0.2)",
+            boxShadow: "0 30px 70px -15px rgba(0,0,0,0.8), 0 0 45px -10px rgba(29,158,117,0.25)",
           }}
         >
-          {/* Tab bar */}
-          <div style={{ background: "rgba(255,255,255,0.03)", borderBottom: "0.5px solid rgba(255,255,255,0.08)", display: "flex", padding: "0 20px" }}>
-            {["Dependency Graph", "Target Schemas", "Queries"].map((t, i) => (
-              <div key={t} style={{ padding: "12px 18px", fontSize: 13, fontFamily: "Space Grotesk,sans-serif", color: i === 0 ? "#1D9E75" : "rgba(255,255,255,0.35)", fontWeight: i === 0 ? 600 : 400, borderBottom: i === 0 ? "2px solid #1D9E75" : "2px solid transparent" }}>{t}</div>
-            ))}
-          </div>
-          {/* Interactive canvas */}
-          <div style={{ position: "relative", height: 360, overflow: "hidden" }}>
-            <DashboardCanvas />
-            {/* Stats bar overlay */}
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(9,12,18,0.84)", backdropFilter: "blur(8px)", borderTop: "0.5px solid rgba(255,255,255,0.07)", display: "flex", padding: "10px 20px" }}>
-              {[{ l: "Tables", v: "24" }, { l: "Services", v: "6" }, { l: "Edges", v: "47" }, { l: "Validation", v: "✓ Pass" }].map((s, i) => (
-                <div key={s.l} style={{ flex: 1, textAlign: "center", borderRight: i < 3 ? "0.5px solid rgba(255,255,255,0.07)" : "none" }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: i === 3 ? "#1D9E75" : "#fff", fontFamily: "Space Grotesk,sans-serif" }}>{s.v}</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", fontFamily: "Inter,sans-serif", marginTop: 2 }}>{s.l}</div>
-                </div>
+          {/* Top header bar */}
+          <div style={{ background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", flexWrap: "wrap", gap: 10 }}>
+            <div style={{ display: "flex" }}>
+              {["Dependency Graph", "Target Schemas", "Queries"].map((t, i) => (
+                <div key={t} style={{ padding: "14px 20px", fontSize: 13, fontFamily: "Space Grotesk,sans-serif", color: i === 0 ? "#1D9E75" : "rgba(255,255,255,0.55)", fontWeight: i === 0 ? 700 : 500, borderBottom: i === 0 ? "2px solid #1D9E75" : "2px solid transparent", cursor: "pointer" }}>{t}</div>
               ))}
             </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", background: "rgba(29, 158, 117, 0.12)", border: "1px solid rgba(29, 158, 117, 0.28)", borderRadius: 100, fontSize: 12, color: "#5DCAA5", fontFamily: "Space Grotesk, sans-serif", fontWeight: 600 }}>
+              <span>✋ Click & drag any service node</span>
+            </div>
+          </div>
+
+          {/* Interactive canvas with generous 520px height so all nodes & labels fit cleanly */}
+          <div style={{ position: "relative", height: 520, overflow: "hidden", background: "radial-gradient(ellipse at 50% 50%, rgba(13, 20, 36, 0.6) 0%, rgba(9, 13, 24, 0.95) 100%)" }}>
+            <DashboardCanvas />
+          </div>
+
+          {/* Dedicated bottom stats bar - cleanly placed below the canvas so nothing is ever obstructed */}
+          <div style={{ background: "rgba(9, 12, 18, 0.94)", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", padding: "14px 24px" }}>
+            {[{ l: "Total Tables", v: "24" }, { l: "Identified Services", v: "6" }, { l: "Inter-Service Edges", v: "47" }, { l: "Integrity Validation", v: "✓ 100% Pass" }].map((s, i) => (
+              <div key={s.l} style={{ flex: 1, textAlign: "center", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+                <div style={{ fontSize: 17, fontWeight: 700, color: i === 3 ? "#1D9E75" : "#fff", fontFamily: "Space Grotesk,sans-serif" }}>{s.v}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", fontFamily: "Inter,sans-serif", marginTop: 2, fontWeight: 500 }}>{s.l}</div>
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>
@@ -758,11 +985,29 @@ function DashboardSection() {
 /* ─── How it works ───────────────────────────────────────────── */
 function HowSection() {
   return (
-    <section id="how" style={{ background: "transparent", padding: "90px 24px", position: "relative" }}>
-      <div style={{ maxWidth: 860, margin: "0 auto" }}>
-        <FadeIn style={{ textAlign: "center", marginBottom: 52 }}>
-          <p style={{ color: "#1D9E75", fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", marginBottom: 10 }}>7-STEP PIPELINE</p>
-          <h2 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.7rem,4vw,2.6rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", margin: 0 }}>How it works</h2>
+    <section id="how" style={{ background: "transparent", padding: "100px 24px 80px", position: "relative" }}>
+      <div style={{ maxWidth: 880, margin: "0 auto" }}>
+        <FadeIn style={{ textAlign: "center", marginBottom: 52, position: "relative" }}>
+          <div style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "min(520px, 92vw)",
+            height: "150px",
+            background: "radial-gradient(ellipse 65% 65% at 50% 50%, rgba(6, 8, 16, 0.72) 0%, transparent 100%)",
+            borderRadius: "50%",
+            filter: "blur(16px)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }} />
+          <div style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(29, 158, 117, 0.15)", border: "1px solid rgba(29, 158, 117, 0.4)", borderRadius: 100, padding: "6px 18px", marginBottom: 14, boxShadow: "0 0 20px rgba(29, 158, 117, 0.2)" }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1D9E75", boxShadow: "0 0 10px #1D9E75", display: "inline-block" }} />
+            <span style={{ color: "#5DCAA5", fontFamily: "Space Grotesk,sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.14em" }}>7-STEP PIPELINE</span>
+          </div>
+          <h2 style={{ position: "relative", zIndex: 1, fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.9rem,4vw,2.8rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", margin: 0, textShadow: "0 4px 28px rgba(6, 8, 16, 0.95), 0 2px 10px rgba(0, 0, 0, 0.9)" }}>
+            How it works
+          </h2>
         </FadeIn>
         <div style={{ display: "flex", flexDirection: "column" }}>
           {STEPS.map((step, i) => (
@@ -777,13 +1022,31 @@ function HowSection() {
 /* ─── Features ───────────────────────────────────────────────── */
 function FeaturesSection() {
   return (
-    <section id="features" style={{ background: "transparent", padding: "90px 24px", position: "relative" }}>
-      <div style={{ maxWidth: 940, margin: "0 auto" }}>
-        <FadeIn style={{ textAlign: "center", marginBottom: 48 }}>
-          <p style={{ color: "#534AB7", fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", marginBottom: 10 }}>WHAT'S INSIDE</p>
-          <h2 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.7rem,4vw,2.6rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", margin: 0 }}>Built for real decomposition work</h2>
+    <section id="features" style={{ background: "transparent", padding: "100px 24px 80px", position: "relative" }}>
+      <div style={{ maxWidth: 960, margin: "0 auto" }}>
+        <FadeIn style={{ textAlign: "center", marginBottom: 48, position: "relative" }}>
+          <div style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "min(520px, 92vw)",
+            height: "150px",
+            background: "radial-gradient(ellipse 65% 65% at 50% 50%, rgba(6, 8, 16, 0.72) 0%, transparent 100%)",
+            borderRadius: "50%",
+            filter: "blur(16px)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }} />
+          <div style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(99, 102, 241, 0.15)", border: "1px solid rgba(129, 140, 248, 0.4)", borderRadius: 100, padding: "6px 18px", marginBottom: 14, boxShadow: "0 0 20px rgba(99, 102, 241, 0.2)" }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#818cf8", boxShadow: "0 0 10px #818cf8", display: "inline-block" }} />
+            <span style={{ color: "#a5b4fc", fontFamily: "Space Grotesk,sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.14em" }}>WHAT'S INSIDE</span>
+          </div>
+          <h2 style={{ position: "relative", zIndex: 1, fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.9rem,4vw,2.8rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", margin: 0, textShadow: "0 4px 28px rgba(6, 8, 16, 0.95), 0 2px 10px rgba(0, 0, 0, 0.9)" }}>
+            Built for real decomposition work
+          </h2>
         </FadeIn>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(270px,1fr))", gap: 18 }}>
           {FEATURES.map((f, i) => (
             <motion.div
               key={f.label}
@@ -792,10 +1055,10 @@ function FeaturesSection() {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, delay: i * 0.08, ease: "easeOut" }}
             >
-              <TiltCard style={{ background: "rgba(10, 16, 28, 0.65)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "0.5px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "22px 22px", height: "100%" }}>
-                <div style={{ fontSize: 20, marginBottom: 10, color: "#1D9E75" }}>{f.icon}</div>
-                <div style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 15, color: "#fff", marginBottom: 6 }}>{f.label}</div>
-                <div style={{ fontFamily: "Inter,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.6 }}>{f.text}</div>
+              <TiltCard style={{ background: "rgba(10, 16, 28, 0.82)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: "24px 24px", height: "100%", boxShadow: "0 15px 35px -10px rgba(0,0,0,0.6)" }}>
+                <div style={{ fontSize: 22, marginBottom: 12, color: "#1D9E75", filter: "drop-shadow(0 0 10px rgba(29,158,117,0.4))" }}>{f.icon}</div>
+                <div style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 700, fontSize: 16, color: "#fff", marginBottom: 8, textShadow: "0 2px 10px rgba(0,0,0,0.8)" }}>{f.label}</div>
+                <div style={{ fontFamily: "Inter,sans-serif", fontSize: 13.5, color: "#cbd5e1", lineHeight: 1.65 }}>{f.text}</div>
               </TiltCard>
             </motion.div>
           ))}
@@ -873,12 +1136,32 @@ function SimpleMemberCard({ member }) {
 
 function TeamPage() {
   return (
-    <section style={{ minHeight: "100vh", background: "transparent", padding: "110px 24px 80px" }}>
+    <section style={{ minHeight: "100vh", background: "transparent", padding: "110px 24px 80px", position: "relative" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 64 }}>
-          <p style={{ color: "#534AB7", fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.1em", marginBottom: 12 }}>THE PEOPLE</p>
-          <h1 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(2rem,5vw,3rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.8px", marginBottom: 12 }}>Built by three.</h1>
-          <p style={{ fontFamily: "Inter,sans-serif", fontSize: 15, color: "rgba(255,255,255,0.6)", maxWidth: 440, margin: "0 auto", lineHeight: 1.7 }}>SchemaMorph AI is a capstone project — a real tool built by engineers who needed it to exist.</p>
+        <div style={{ textAlign: "center", marginBottom: 64, position: "relative" }}>
+          <div style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "min(560px, 92vw)",
+            height: "160px",
+            background: "radial-gradient(ellipse 65% 65% at 50% 50%, rgba(6, 8, 16, 0.75) 0%, transparent 100%)",
+            borderRadius: "50%",
+            filter: "blur(18px)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }} />
+          <div style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(99, 102, 241, 0.15)", border: "1px solid rgba(129, 140, 248, 0.4)", borderRadius: 100, padding: "6px 18px", marginBottom: 16, boxShadow: "0 0 20px rgba(99, 102, 241, 0.2)" }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#818cf8", boxShadow: "0 0 10px #818cf8", display: "inline-block" }} />
+            <span style={{ color: "#a5b4fc", fontFamily: "Space Grotesk,sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.14em" }}>THE PEOPLE</span>
+          </div>
+          <h1 style={{ position: "relative", zIndex: 1, fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(2rem,5vw,3.2rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.8px", marginBottom: 14, textShadow: "0 4px 28px rgba(6, 8, 16, 0.95), 0 2px 10px rgba(0, 0, 0, 0.9)" }}>
+            Built by three.
+          </h1>
+          <p style={{ position: "relative", zIndex: 1, fontFamily: "Inter,sans-serif", fontSize: 16, color: "#e2e8f0", maxWidth: 480, margin: "0 auto", lineHeight: 1.7, textShadow: "0 2px 16px rgba(0,0,0,0.95)" }}>
+            SchemaMorph AI is a capstone project — a real tool built by engineers who needed it to exist.
+          </p>
         </div>
         <div className="team-container">
           {TEAM_MEMBERS.map(m => (
@@ -886,11 +1169,11 @@ function TeamPage() {
           ))}
         </div>
         <FadeIn i={3} style={{ marginTop: 52 }}>
-          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.02)", border: "0.5px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: 24 }}>
-            <p style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 600, fontSize: 13, color: "rgba(255,255,255,0.6)", margin: "0 0 12px" }}>Built with</p>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+          <div style={{ textAlign: "center", background: "rgba(10, 16, 28, 0.8)", backdropFilter: "blur(18px)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "26px 24px", boxShadow: "0 15px 35px -10px rgba(0,0,0,0.6)" }}>
+            <p style={{ fontFamily: "Space Grotesk,sans-serif", fontWeight: 700, fontSize: 14, color: "#ffffff", margin: "0 0 14px", letterSpacing: "0.05em" }}>Built with</p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
               {["FastAPI", "LangChain", "Gemini 1.5", "NetworkX", "sqlglot", "React 18", "React Flow", "Supabase", "Docker"].map(t => (
-                <span key={t} style={{ background: "rgba(255,255,255,0.06)", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 6, padding: "4px 10px", fontSize: 12, color: "rgba(255,255,255,0.65)", fontFamily: "Space Grotesk,sans-serif" }}>{t}</span>
+                <span key={t} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, padding: "5px 12px", fontSize: 13, color: "#e2e8f0", fontFamily: "Space Grotesk,sans-serif", fontWeight: 500 }}>{t}</span>
               ))}
             </div>
           </div>
@@ -909,7 +1192,7 @@ export default function Landing() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
         @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
         @keyframes blink{50%{opacity:0}}
         @keyframes pulse{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.22);opacity:0}}
@@ -925,17 +1208,34 @@ export default function Landing() {
             <DashboardSection />
             <HowSection />
             <FeaturesSection />
-            <section style={{ padding: "100px 24px", textAlign: "center", background: "transparent", position: "relative" }}>
-              <div style={{ maxWidth: 500, margin: "0 auto" }}>
-                <h2 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.7rem,4vw,2.4rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", marginBottom: 14 }}>Ready to decompose your schema?</h2>
-                <p style={{ color: "rgba(255,255,255,0.38)", fontFamily: "Inter,sans-serif", fontSize: 14, lineHeight: 1.7, marginBottom: 30 }}>Upload your PostgreSQL DDL and get a full microservice decomposition report in seconds.</p>
+            <section style={{ padding: "110px 24px", textAlign: "center", background: "transparent", position: "relative" }}>
+              <div style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: "min(620px, 94vw)",
+                height: "240px",
+                background: "radial-gradient(ellipse 65% 65% at 50% 50%, rgba(6, 8, 16, 0.78) 0%, transparent 100%)",
+                borderRadius: "50%",
+                filter: "blur(20px)",
+                pointerEvents: "none",
+                zIndex: 0,
+              }} />
+              <div style={{ maxWidth: 540, margin: "0 auto", position: "relative", zIndex: 1 }}>
+                <h2 style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: "clamp(1.9rem,4vw,2.6rem)", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px", marginBottom: 16, textShadow: "0 4px 28px rgba(6, 8, 16, 0.95), 0 2px 10px rgba(0, 0, 0, 0.9)" }}>
+                  Ready to decompose your schema?
+                </h2>
+                <p style={{ color: "#e2e8f0", fontFamily: "Inter,sans-serif", fontSize: 15, lineHeight: 1.7, marginBottom: 32, textShadow: "0 2px 14px rgba(0,0,0,0.95)" }}>
+                  Upload your PostgreSQL DDL and get a full microservice decomposition report in seconds.
+                </p>
                 <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
                   {token ? (
-                    <button onClick={() => navigate("/upload")} style={{ background: "#1D9E75", color: "#fff", padding: "12px 26px", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: "Space Grotesk,sans-serif", border: "none", cursor: "pointer", display: "inline-block" }}>Go to Dashboard →</button>
+                    <button onClick={() => navigate("/upload")} style={{ background: "#1D9E75", color: "#fff", padding: "13px 28px", borderRadius: 10, fontSize: 15, fontWeight: 600, fontFamily: "Space Grotesk,sans-serif", border: "none", cursor: "pointer", display: "inline-block", boxShadow: "0 0 20px rgba(29,158,117,0.4)" }}>Go to Dashboard →</button>
                   ) : (
                     <>
-                      <button onClick={() => navigate("/register")} style={{ background: "#1D9E75", color: "#fff", padding: "12px 26px", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: "Space Grotesk,sans-serif", border: "none", cursor: "pointer", display: "inline-block" }}>Get started →</button>
-                      <button onClick={() => navigate("/login")} style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.75)", border: "0.5px solid rgba(255,255,255,0.12)", padding: "12px 22px", borderRadius: 10, fontSize: 14, fontWeight: 500, fontFamily: "Space Grotesk,sans-serif", cursor: "pointer", display: "inline-block" }}>Log in</button>
+                      <button onClick={() => navigate("/register")} style={{ background: "#1D9E75", color: "#fff", padding: "13px 28px", borderRadius: 10, fontSize: 15, fontWeight: 600, fontFamily: "Space Grotesk,sans-serif", border: "none", cursor: "pointer", display: "inline-block", boxShadow: "0 0 20px rgba(29,158,117,0.4)" }}>Get started →</button>
+                      <button onClick={() => navigate("/login")} style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.92)", border: "1px solid rgba(255,255,255,0.22)", padding: "13px 24px", borderRadius: 10, fontSize: 15, fontWeight: 500, fontFamily: "Space Grotesk,sans-serif", cursor: "pointer", display: "inline-block" }}>Log in</button>
                     </>
                   )}
                 </div>
@@ -943,19 +1243,19 @@ export default function Landing() {
             </section>
           </>
         ) : <TeamPage />}
-        <footer style={{ background: "rgba(6,8,16,0.75)", backdropFilter: "blur(16px)", borderTop: "0.5px solid rgba(255,255,255,0.06)", padding: "24px 28px" }}>
+        <footer style={{ background: "rgba(6,8,16,0.85)", backdropFilter: "blur(18px)", borderTop: "1px solid rgba(255,255,255,0.08)", padding: "26px 28px" }}>
           <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <p style={{ fontFamily: "Inter,sans-serif", fontSize: 12, color: "rgba(255,255,255,0.22)" }}>© 2025 SchemaMorph AI · Raghuraj · Samridhi Singh · Samridhi Jaiswal</p>
-            <div style={{ display: "flex", gap: 16 }}>
+            <p style={{ fontFamily: "Inter,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.65)", fontWeight: 500 }}>© 2025 SchemaMorph AI · Raghuraj · Samridhi Singh · Samridhi Jaiswal</p>
+            <div style={{ display: "flex", gap: 20 }}>
               {token ? (
                 <>
-                  <button onClick={() => navigate("/upload")} style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 12, color: "rgba(255,255,255,0.28)", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}>Dashboard</button>
-                  <button onClick={() => { logout(); navigate("/"); }} style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 12, color: "rgba(255,255,255,0.28)", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}>Log out</button>
+                  <button onClick={() => navigate("/upload")} style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", textDecoration: "none", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>Dashboard</button>
+                  <button onClick={() => { logout(); navigate("/"); }} style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", textDecoration: "none", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>Log out</button>
                 </>
               ) : (
                 <>
-                  <button onClick={() => navigate("/login")} style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 12, color: "rgba(255,255,255,0.28)", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}>Log in</button>
-                  <button onClick={() => navigate("/register")} style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 12, color: "rgba(255,255,255,0.28)", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}>Sign up</button>
+                  <button onClick={() => navigate("/login")} style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", textDecoration: "none", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>Log in</button>
+                  <button onClick={() => navigate("/register")} style={{ fontFamily: "Space Grotesk,sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", textDecoration: "none", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>Sign up</button>
                 </>
               )}
             </div>
